@@ -1,26 +1,26 @@
-import { db } from '@/db'
-import { cards } from '@/features/cards/schema'
-import { cardProgress } from './schema'
-import { eq, lte, and, inArray } from 'drizzle-orm'
+import { db } from "@/db";
+import { cards } from "@/features/cards/schema";
+import { cardProgress } from "./schema";
+import { eq, lte, and, inArray } from "drizzle-orm";
 
 export interface StudyCard {
-  id: string
-  front: string
-  back: string
-  type: string
+  id: string;
+  front: string;
+  back: string;
+  type: string;
   progress: {
-    repetitions: number
-    easinessFactor: number
-    intervalDays: number
-    status: string
-  } | null
+    repetitions: number;
+    easinessFactor: number;
+    intervalDays: number;
+    status: string;
+  } | null;
 }
 
 /**
  * 학습 대상 카드 조회 (항상 동적 — 캐시하지 않음)
  */
 export async function getStudyCards(deckId: string): Promise<StudyCard[]> {
-  const now = new Date()
+  const now = new Date();
 
   // Cards with progress that are due
   const dueCards = await db
@@ -38,38 +38,38 @@ export async function getStudyCards(deckId: string): Promise<StudyCard[]> {
     .innerJoin(cardProgress, eq(cards.id, cardProgress.cardId))
     .where(
       and(eq(cards.deckId, deckId), lte(cardProgress.nextReviewDate, now)),
-    )
+    );
 
   // New cards (no progress record)
   const allCards = await db
     .select({ id: cards.id })
     .from(cards)
-    .where(eq(cards.deckId, deckId))
+    .where(eq(cards.deckId, deckId));
 
   const cardsWithProgressIds = await db
     .select({ cardId: cardProgress.cardId })
     .from(cardProgress)
     .innerJoin(cards, eq(cards.id, cardProgress.cardId))
-    .where(eq(cards.deckId, deckId))
+    .where(eq(cards.deckId, deckId));
 
-  const progressSet = new Set(cardsWithProgressIds.map((c) => c.cardId))
+  const progressSet = new Set(cardsWithProgressIds.map((c) => c.cardId));
   const newCardIds = allCards
     .filter((c) => !progressSet.has(c.id))
-    .map((c) => c.id)
+    .map((c) => c.id);
 
-  let newCards: StudyCard[] = []
+  let newCards: StudyCard[] = [];
   if (newCardIds.length > 0) {
     const newCardData = await db
       .select()
       .from(cards)
-      .where(and(eq(cards.deckId, deckId), inArray(cards.id, newCardIds)))
+      .where(and(eq(cards.deckId, deckId), inArray(cards.id, newCardIds)));
     newCards = newCardData.map((c) => ({
       id: c.id,
       front: c.front,
       back: c.back,
       type: c.type,
       progress: null,
-    }))
+    }));
   }
 
   const dueStudyCards: StudyCard[] = dueCards.map((c) => ({
@@ -83,16 +83,16 @@ export async function getStudyCards(deckId: string): Promise<StudyCard[]> {
       intervalDays: c.intervalDays,
       status: c.status,
     },
-  }))
+  }));
 
-  return [...shuffleArray(newCards), ...shuffleArray(dueStudyCards)]
+  return [...shuffleArray(newCards), ...shuffleArray(dueStudyCards)];
 }
 
 function shuffleArray<T>(array: T[]): T[] {
-  const shuffled = [...array]
+  const shuffled = [...array];
   for (let i = shuffled.length - 1; i > 0; i--) {
-    const j = Math.floor(Math.random() * (i + 1))
-      ;[shuffled[i], shuffled[j]] = [shuffled[j], shuffled[i]]
+    const j = Math.floor(Math.random() * (i + 1));
+    [shuffled[i], shuffled[j]] = [shuffled[j], shuffled[i]];
   }
-  return shuffled
+  return shuffled;
 }

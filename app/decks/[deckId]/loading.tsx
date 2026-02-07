@@ -1,4 +1,4 @@
-import { Skeleton } from '@/components/ui/skeleton'
+import { Skeleton } from "@/components/ui/skeleton";
 
 export default function DeckLoading() {
   return (
@@ -35,5 +35,5 @@ export default function DeckLoading() {
         </div>
       </main>
     </div>
-  )
+  );
 }

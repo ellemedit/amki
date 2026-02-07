@@ -1,37 +1,37 @@
-import { Suspense } from 'react'
-import { connection } from 'next/server'
-import { getStudyCards } from '@/features/study/queries'
-import { getDeck } from '@/features/decks/queries'
-import { notFound } from 'next/navigation'
-import { StudySession } from './study-session'
-import { Skeleton } from '@/components/ui/skeleton'
+import { Suspense } from "react";
+import { connection } from "next/server";
+import { getStudyCards } from "@/features/study/queries";
+import { getDeck } from "@/features/decks/queries";
+import { notFound } from "next/navigation";
+import { StudySession } from "./study-session";
+import { Skeleton } from "@/components/ui/skeleton";
 
 interface Props {
-  params: Promise<{ deckId: string }>
+  params: Promise<{ deckId: string }>;
 }
 
 export default async function StudyPage({ params }: Props) {
-  const { deckId } = await params
+  const { deckId } = await params;
 
   return (
     <Suspense fallback={<StudySkeleton />}>
       <StudyContent deckId={deckId} />
     </Suspense>
-  )
+  );
 }
 
 // --- Dynamic boundary: study cards are always fresh (not cached) ---
 
 async function StudyContent({ deckId }: { deckId: string }) {
   // Explicitly opt into request-time rendering for fresh due-date data
-  await connection()
+  await connection();
 
-  const deck = await getDeck(deckId)
-  if (!deck) notFound()
+  const deck = await getDeck(deckId);
+  if (!deck) notFound();
 
-  const studyCards = await getStudyCards(deckId)
+  const studyCards = await getStudyCards(deckId);
 
-  return <StudySession deck={deck} initialCards={studyCards} />
+  return <StudySession deck={deck} initialCards={studyCards} />;
 }
 
 function StudySkeleton() {
@@ -57,5 +57,5 @@ function StudySkeleton() {
         <Skeleton className="mt-6 h-12 w-full" />
       </main>
     </div>
-  )
+  );
 }

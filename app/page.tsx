@@ -1,17 +1,17 @@
-import { Suspense } from 'react'
-import Link from 'next/link'
-import { getDecksWithStats } from '@/features/decks/queries'
-import { Button } from '@/components/ui/button'
+import { Suspense } from "react";
+import Link from "next/link";
+import { getDecksWithStats } from "@/features/decks/queries";
+import { Button } from "@/components/ui/button";
 import {
   Card,
   CardContent,
   CardDescription,
   CardHeader,
   CardTitle,
-} from '@/components/ui/card'
-import { Badge } from '@/components/ui/badge'
-import { Skeleton } from '@/components/ui/skeleton'
-import { Plus, BookOpen } from 'lucide-react'
+} from "@/components/ui/card";
+import { Badge } from "@/components/ui/badge";
+import { Skeleton } from "@/components/ui/skeleton";
+import { Plus, BookOpen } from "lucide-react";
 
 // --- Static shell (prerendered) ---
 
@@ -40,13 +40,13 @@ export default function HomePage() {
         </Suspense>
       </main>
     </div>
-  )
+  );
 }
 
 // --- Cached data boundary (use cache via getDecksWithStats) ---
 
 async function DeckList() {
-  const decksWithStats = await getDecksWithStats()
+  const decksWithStats = await getDecksWithStats();
 
   if (decksWithStats.length === 0) {
     return (
@@ -62,7 +62,7 @@ async function DeckList() {
           </Button>
         </Link>
       </div>
-    )
+    );
   }
 
   return (
@@ -90,7 +90,7 @@ async function DeckList() {
         </Link>
       ))}
     </div>
-  )
+  );
 }
 
 // --- Skeleton fallback ---
@@ -109,5 +109,5 @@ function DeckListSkeleton() {
         </div>
       ))}
     </div>
-  )
+  );
 }
