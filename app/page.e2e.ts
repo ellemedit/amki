@@ -2,5 +2,5 @@ import { test, expect } from '@playwright/test'
 
 test('home page loads successfully', async ({ page }) => {
   await page.goto('/')
-  await expect(page).toHaveTitle(/amki/i)
+  await expect(page.locator('main')).toBeVisible()
 })
