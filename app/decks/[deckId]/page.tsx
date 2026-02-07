@@ -1,23 +1,23 @@
-import { Suspense } from 'react'
-import Link from 'next/link'
-import { notFound } from 'next/navigation'
-import { getDeck } from '@/features/decks/queries'
-import { getCardsWithProgress } from '@/features/cards/queries'
-import { Button } from '@/components/ui/button'
-import { Badge } from '@/components/ui/badge'
-import { Separator } from '@/components/ui/separator'
-import { Skeleton } from '@/components/ui/skeleton'
-import { Plus, Play, Trash2 } from 'lucide-react'
-import { BackButton } from '@/components/back-button'
-import { updateTag } from 'next/cache'
-import { redirect } from 'next/navigation'
-import { deleteDeckById } from '@/features/decks/mutations'
-import { deleteCardById } from '@/features/cards/mutations'
-import { cn } from '@/lib/utils'
-import { Markdown } from '@/components/markdown'
+import { Suspense } from "react";
+import Link from "next/link";
+import { notFound } from "next/navigation";
+import { getDeck } from "@/features/decks/queries";
+import { getCardsWithProgress } from "@/features/cards/queries";
+import { Button } from "@/components/ui/button";
+import { Badge } from "@/components/ui/badge";
+import { Separator } from "@/components/ui/separator";
+import { Skeleton } from "@/components/ui/skeleton";
+import { Plus, Play, Trash2 } from "lucide-react";
+import { BackButton } from "@/components/back-button";
+import { updateTag } from "next/cache";
+import { redirect } from "next/navigation";
+import { deleteDeckById } from "@/features/decks/mutations";
+import { deleteCardById } from "@/features/cards/mutations";
+import { cn } from "@/lib/utils";
+import { Markdown } from "@/components/markdown";
 
 interface Props {
-  params: Promise<{ deckId: string }>
+  params: Promise<{ deckId: string }>;
 }
 
 // ---------------------------------------------------------------------------
@@ -25,19 +25,19 @@ interface Props {
 // ---------------------------------------------------------------------------
 
 const progressConfig: Record<string, { className: string; label: string }> = {
-  new: { className: 'border-blue-500/25 text-blue-400', label: '새 카드' },
+  new: { className: "border-blue-500/25 text-blue-400", label: "새 카드" },
   learning: {
-    className: 'border-amber-500/25 text-amber-400',
-    label: '학습 중',
+    className: "border-amber-500/25 text-amber-400",
+    label: "학습 중",
   },
   mastered: {
-    className: 'border-emerald-500/25 text-emerald-400',
-    label: '복습',
+    className: "border-emerald-500/25 text-emerald-400",
+    label: "복습",
   },
-}
+};
 
 function getProgressBadgeProps(status: string) {
-  return progressConfig[status] ?? progressConfig.mastered
+  return progressConfig[status] ?? progressConfig.mastered;
 }
 
 // ---------------------------------------------------------------------------
@@ -45,31 +45,31 @@ function getProgressBadgeProps(status: string) {
 // ---------------------------------------------------------------------------
 
 function ProgressBadge({ status }: { status: string }) {
-  const { className, label } = getProgressBadgeProps(status)
+  const { className, label } = getProgressBadgeProps(status);
   return (
     <Badge
       variant="outline"
-      className={cn('h-[22px] px-1.5 text-[10px]', className)}
+      className={cn("h-[22px] px-1.5 text-[10px]", className)}
     >
       {label}
     </Badge>
-  )
+  );
 }
 
 function DeleteCardButton({
   cardId,
   deckId,
 }: {
-  cardId: string
-  deckId: string
+  cardId: string;
+  deckId: string;
 }) {
   return (
     <form
       action={async () => {
-        'use server'
-        await deleteCardById(cardId)
-        updateTag(`cards-${deckId}`)
-        updateTag('decks')
+        "use server";
+        await deleteCardById(cardId);
+        updateTag(`cards-${deckId}`);
+        updateTag("decks");
       }}
     >
       <Button
@@ -80,15 +80,15 @@ function DeleteCardButton({
         <Trash2 className="h-3 w-3" />
       </Button>
     </form>
-  )
+  );
 }
 
 function CardListItem({
   card,
   deckId,
 }: {
-  card: Awaited<ReturnType<typeof getCardsWithProgress>>[number]
-  deckId: string
+  card: Awaited<ReturnType<typeof getCardsWithProgress>>[number];
+  deckId: string;
 }) {
   return (
     <div className="group flex items-start gap-4 rounded-xl border border-transparent bg-transparent px-4 py-3.5 transition-colors hover:border-border/50 hover:bg-card/50">
@@ -102,13 +102,13 @@ function CardListItem({
           variant="outline"
           className="h-[22px] border-border/40 px-1.5 text-[10px] text-muted-foreground"
         >
-          {card.type === 'subjective' ? '주관식' : '기본'}
+          {card.type === "subjective" ? "주관식" : "기본"}
         </Badge>
         {card.progress && <ProgressBadge status={card.progress.status} />}
         <DeleteCardButton cardId={card.id} deckId={deckId} />
       </div>
     </div>
-  )
+  );
 }
 
 // ---------------------------------------------------------------------------
@@ -116,7 +116,7 @@ function CardListItem({
 // ---------------------------------------------------------------------------
 
 export default async function DeckDetailPage({ params }: Props) {
-  const { deckId } = await params
+  const { deckId } = await params;
 
   return (
     <div className="min-h-screen bg-background">
@@ -136,7 +136,7 @@ export default async function DeckDetailPage({ params }: Props) {
         </Suspense>
       </main>
     </div>
-  )
+  );
 }
 
 // ---------------------------------------------------------------------------
@@ -144,8 +144,8 @@ export default async function DeckDetailPage({ params }: Props) {
 // ---------------------------------------------------------------------------
 
 async function DeckHeader({ deckId }: { deckId: string }) {
-  const deck = await getDeck(deckId)
-  if (!deck) notFound()
+  const deck = await getDeck(deckId);
+  if (!deck) notFound();
 
   return (
     <header className="border-b border-border/50">
@@ -161,12 +161,12 @@ async function DeckHeader({ deckId }: { deckId: string }) {
         </div>
         <form
           action={async () => {
-            'use server'
-            await deleteDeckById(deckId)
-            updateTag('decks')
-            updateTag(`deck-${deckId}`)
-            updateTag(`cards-${deckId}`)
-            redirect('/')
+            "use server";
+            await deleteDeckById(deckId);
+            updateTag("decks");
+            updateTag(`deck-${deckId}`);
+            updateTag(`cards-${deckId}`);
+            redirect("/");
           }}
         >
           <Button
@@ -179,7 +179,7 @@ async function DeckHeader({ deckId }: { deckId: string }) {
         </form>
       </div>
     </header>
-  )
+  );
 }
 
 // ---------------------------------------------------------------------------
@@ -187,25 +187,25 @@ async function DeckHeader({ deckId }: { deckId: string }) {
 // ---------------------------------------------------------------------------
 
 async function DeckStatsAndActions({ deckId }: { deckId: string }) {
-  const cardsWithProgress = await getCardsWithProgress(deckId)
+  const cardsWithProgress = await getCardsWithProgress(deckId);
 
-  const now = new Date()
-  const total = cardsWithProgress.length
-  const newCount = cardsWithProgress.filter((c) => !c.progress).length
+  const now = new Date();
+  const total = cardsWithProgress.length;
+  const newCount = cardsWithProgress.filter((c) => !c.progress).length;
   const learningCount = cardsWithProgress.filter(
-    (c) => c.progress?.status === 'learning',
-  ).length
+    (c) => c.progress?.status === "learning",
+  ).length;
   const reviewCount = cardsWithProgress.filter(
     (c) => c.progress && c.progress.nextReviewDate <= now,
-  ).length
-  const dueCount = newCount + reviewCount
+  ).length;
+  const dueCount = newCount + reviewCount;
 
   const stats = [
-    { label: '전체', value: total, color: 'text-foreground' },
-    { label: '새 카드', value: newCount, color: 'text-blue-400' },
-    { label: '학습 중', value: learningCount, color: 'text-amber-400' },
-    { label: '복습 대기', value: reviewCount, color: 'text-emerald-400' },
-  ]
+    { label: "전체", value: total, color: "text-foreground" },
+    { label: "새 카드", value: newCount, color: "text-blue-400" },
+    { label: "학습 중", value: learningCount, color: "text-amber-400" },
+    { label: "복습 대기", value: reviewCount, color: "text-emerald-400" },
+  ];
 
   return (
     <>
@@ -216,7 +216,7 @@ async function DeckStatsAndActions({ deckId }: { deckId: string }) {
             className="rounded-xl border border-border/50 bg-card/50 px-4 py-3.5 text-center"
           >
             <div
-              className={cn('text-2xl font-semibold tabular-nums', stat.color)}
+              className={cn("text-2xl font-semibold tabular-nums", stat.color)}
             >
               {stat.value}
             </div>
@@ -244,7 +244,7 @@ async function DeckStatsAndActions({ deckId }: { deckId: string }) {
         </Link>
       </div>
     </>
-  )
+  );
 }
 
 // ---------------------------------------------------------------------------
@@ -252,7 +252,7 @@ async function DeckStatsAndActions({ deckId }: { deckId: string }) {
 // ---------------------------------------------------------------------------
 
 async function DeckCardList({ deckId }: { deckId: string }) {
-  const cardsWithProgress = await getCardsWithProgress(deckId)
+  const cardsWithProgress = await getCardsWithProgress(deckId);
 
   if (cardsWithProgress.length === 0) {
     return (
@@ -266,7 +266,7 @@ async function DeckCardList({ deckId }: { deckId: string }) {
           </Button>
         </Link>
       </div>
-    )
+    );
   }
 
   return (
@@ -278,7 +278,7 @@ async function DeckCardList({ deckId }: { deckId: string }) {
         <CardListItem key={card.id} card={card} deckId={deckId} />
       ))}
     </div>
-  )
+  );
 }
 
 // ---------------------------------------------------------------------------
@@ -296,7 +296,7 @@ function HeaderSkeleton() {
         </div>
       </div>
     </header>
-  )
+  );
 }
 
 function StatsSkeleton() {
@@ -318,7 +318,7 @@ function StatsSkeleton() {
         <Skeleton className="h-8 w-24" />
       </div>
     </>
-  )
+  );
 }
 
 function CardListSkeleton() {
@@ -331,5 +331,5 @@ function CardListSkeleton() {
         </div>
       ))}
     </div>
-  )
+  );
 }

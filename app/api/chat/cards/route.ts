@@ -1,9 +1,4 @@
-import {
-  convertToModelMessages,
-  streamText,
-  UIMessage,
-  stepCountIs,
-} from "ai";
+import { convertToModelMessages, streamText, UIMessage, stepCountIs } from "ai";
 import { anthropic } from "@ai-sdk/anthropic";
 import { z } from "zod";
 import { revalidateTag } from "next/cache";
@@ -47,9 +42,7 @@ export async function POST(req: Request) {
           front: z
             .string()
             .describe("카드 앞면 - 질문 또는 암기할 내용의 프롬프트"),
-          back: z
-            .string()
-            .describe("카드 뒷면 - 정답 또는 암기할 내용의 설명"),
+          back: z.string().describe("카드 뒷면 - 정답 또는 암기할 내용의 설명"),
           type: z
             .enum(["basic", "subjective"])
             .default("basic")

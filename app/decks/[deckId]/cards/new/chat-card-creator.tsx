@@ -1,14 +1,14 @@
-'use client'
+"use client";
 
-import { useRef, useState, useEffect, type DragEvent } from 'react'
-import { useChat } from '@ai-sdk/react'
+import { useRef, useState, useEffect, type DragEvent } from "react";
+import { useChat } from "@ai-sdk/react";
 import {
   DefaultChatTransport,
   lastAssistantMessageIsCompleteWithToolCalls,
   type UIMessage,
-} from 'ai'
-import { Textarea } from '@/components/ui/textarea'
-import { Badge } from '@/components/ui/badge'
+} from "ai";
+import { Textarea } from "@/components/ui/textarea";
+import { Badge } from "@/components/ui/badge";
 import {
   Paperclip,
   FileText,
@@ -20,24 +20,24 @@ import {
   Sparkles,
   Bot,
   ArrowUp,
-} from 'lucide-react'
-import { cn } from '@/lib/utils'
-import { Markdown } from '@/components/markdown'
+} from "lucide-react";
+import { cn } from "@/lib/utils";
+import { Markdown } from "@/components/markdown";
 
 // ---------------------------------------------------------------------------
 // Types
 // ---------------------------------------------------------------------------
 
 interface ChatCardCreatorProps {
-  deckId: string
-  initialMessages?: UIMessage[]
-  chatId: string
+  deckId: string;
+  initialMessages?: UIMessage[];
+  chatId: string;
 }
 
 interface FileAttachment {
-  name: string
-  type: string
-  url: string
+  name: string;
+  type: string;
+  url: string;
 }
 
 // ---------------------------------------------------------------------------
@@ -49,14 +49,14 @@ function AiAvatar() {
     <div className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-primary/10 ring-1 ring-primary/20">
       <Bot className="h-3.5 w-3.5 text-primary" />
     </div>
-  )
+  );
 }
 
 function FileIcon({ type }: { type: string }) {
-  if (type.startsWith('image/')) return <ImageIcon className="h-3.5 w-3.5" />
-  if (type === 'application/pdf')
-    return <FileText className="h-3.5 w-3.5 text-red-400" />
-  return <FileText className="h-3.5 w-3.5" />
+  if (type.startsWith("image/")) return <ImageIcon className="h-3.5 w-3.5" />;
+  if (type === "application/pdf")
+    return <FileText className="h-3.5 w-3.5 text-red-400" />;
+  return <FileText className="h-3.5 w-3.5" />;
 }
 
 function UserTextBubble({ text }: { text: string }) {
@@ -64,11 +64,11 @@ function UserTextBubble({ text }: { text: string }) {
     <div className="rounded-2xl rounded-br-lg bg-primary px-4 py-2.5 text-[14px] leading-relaxed text-primary-foreground">
       {text}
     </div>
-  )
+  );
 }
 
 function UserImageAttachment({ url }: { url: string }) {
-  return <img src={url} alt="첨부 이미지" className="max-h-48 rounded-xl" />
+  return <img src={url} alt="첨부 이미지" className="max-h-48 rounded-xl" />;
 }
 
 function UserFileAttachment() {
@@ -77,51 +77,51 @@ function UserFileAttachment() {
       <FileText className="h-3.5 w-3.5 shrink-0" />
       첨부 파일
     </div>
-  )
+  );
 }
 
-function UserMessagePart({ part }: { part: UIMessage['parts'][number] }) {
-  if (part.type === 'text') return <UserTextBubble text={part.text} />
+function UserMessagePart({ part }: { part: UIMessage["parts"][number] }) {
+  if (part.type === "text") return <UserTextBubble text={part.text} />;
 
-  if (part.type === 'file') {
-    if (part.mediaType?.startsWith('image/')) {
-      return <UserImageAttachment url={part.url} />
+  if (part.type === "file") {
+    if (part.mediaType?.startsWith("image/")) {
+      return <UserImageAttachment url={part.url} />;
     }
-    return <UserFileAttachment />
+    return <UserFileAttachment />;
   }
 
-  return null
+  return null;
 }
 
 function CardAddResult({
   part,
 }: {
-  part: { state: string; input?: unknown; output?: unknown }
+  part: { state: string; input?: unknown; output?: unknown };
 }) {
-  if (part.state === 'input-streaming' || part.state === 'input-available') {
+  if (part.state === "input-streaming" || part.state === "input-available") {
     return (
       <div className="flex items-center gap-2.5 rounded-xl border border-dashed border-border/60 px-4 py-3 text-xs text-muted-foreground">
         <Loader2 className="h-3.5 w-3.5 animate-spin" />
         카드 추가 중...
       </div>
-    )
+    );
   }
 
-  if (part.state === 'output-error') {
+  if (part.state === "output-error") {
     return (
       <div className="rounded-xl border border-destructive/15 bg-destructive/5 px-4 py-3 text-xs text-destructive">
         카드 추가 중 오류가 발생했습니다
       </div>
-    )
+    );
   }
 
-  if (part.state !== 'output-available' || !part.output) return null
+  if (part.state !== "output-available" || !part.output) return null;
 
   const { front, back, type } = part.output as {
-    front: string
-    back: string
-    type: string
-  }
+    front: string;
+    back: string;
+    type: string;
+  };
 
   return (
     <div className="rounded-xl border border-emerald-500/15 bg-emerald-500/3 px-4 py-3.5">
@@ -136,7 +136,7 @@ function CardAddResult({
           variant="outline"
           className="h-[18px] border-border/40 px-1.5 text-[10px] text-muted-foreground"
         >
-          {type === 'subjective' ? '주관식' : '기본'}
+          {type === "subjective" ? "주관식" : "기본"}
         </Badge>
       </div>
       <div className="text-[13px] font-medium leading-snug">
@@ -146,7 +146,7 @@ function CardAddResult({
         <Markdown>{back}</Markdown>
       </div>
     </div>
-  )
+  );
 }
 
 // ---------------------------------------------------------------------------
@@ -162,24 +162,24 @@ function UserMessage({ message }: { message: UIMessage }) {
         ))}
       </div>
     </div>
-  )
+  );
 }
 
 function AssistantMessage({ message }: { message: UIMessage }) {
-  const textParts = message.parts.filter((p) => p.type === 'text')
-  const toolParts = message.parts.filter((p) => p.type === 'tool-cardAdd')
+  const textParts = message.parts.filter((p) => p.type === "text");
+  const toolParts = message.parts.filter((p) => p.type === "tool-cardAdd");
 
   return (
     <div className="flex items-start gap-3">
       <AiAvatar />
       <div className="min-w-0 flex-1 space-y-3 pt-0.5">
         {textParts.map((part, i) => {
-          if (part.type !== 'text') return null
+          if (part.type !== "text") return null;
           return (
             <div key={i} className="text-[14px] leading-[1.7]">
               <Markdown>{part.text}</Markdown>
             </div>
-          )
+          );
         })}
 
         {toolParts.length > 0 && (
@@ -191,12 +191,12 @@ function AssistantMessage({ message }: { message: UIMessage }) {
         )}
       </div>
     </div>
-  )
+  );
 }
 
 function MessageRow({ message }: { message: UIMessage }) {
-  if (message.role === 'user') return <UserMessage message={message} />
-  return <AssistantMessage message={message} />
+  if (message.role === "user") return <UserMessage message={message} />;
+  return <AssistantMessage message={message} />;
 }
 
 // ---------------------------------------------------------------------------
@@ -206,25 +206,25 @@ function MessageRow({ message }: { message: UIMessage }) {
 const suggestions = [
   {
     icon: FileText,
-    text: '이 텍스트로 카드 만들어줘',
-    desc: '텍스트를 붙여넣으면 핵심 개념을 카드로 만들어 드려요',
+    text: "이 텍스트로 카드 만들어줘",
+    desc: "텍스트를 붙여넣으면 핵심 개념을 카드로 만들어 드려요",
   },
   {
     icon: ImageIcon,
-    text: '이미지에서 카드 추출해줘',
-    desc: '교과서, 노트 사진에서 핵심 내용을 카드로 만들어요',
+    text: "이미지에서 카드 추출해줘",
+    desc: "교과서, 노트 사진에서 핵심 내용을 카드로 만들어요",
   },
   {
     icon: LinkIcon,
-    text: 'JavaScript의 클로저에 대해 카드 만들어줘',
-    desc: '주제를 알려주면 핵심 개념 카드를 만들어 드려요',
+    text: "JavaScript의 클로저에 대해 카드 만들어줘",
+    desc: "주제를 알려주면 핵심 개념 카드를 만들어 드려요",
   },
-]
+];
 
 function EmptyState({
   onSuggestionClick,
 }: {
-  onSuggestionClick: (text: string) => void
+  onSuggestionClick: (text: string) => void;
 }) {
   return (
     <div className="flex flex-col items-center justify-center py-20">
@@ -253,7 +253,7 @@ function EmptyState({
         ))}
       </div>
     </div>
-  )
+  );
 }
 
 // ---------------------------------------------------------------------------
@@ -264,8 +264,8 @@ function FileChip({
   file,
   onRemove,
 }: {
-  file: FileAttachment
-  onRemove: () => void
+  file: FileAttachment;
+  onRemove: () => void;
 }) {
   return (
     <div className="flex items-center gap-1.5 rounded-lg border border-border/60 bg-card px-2.5 py-1.5 text-xs">
@@ -278,7 +278,7 @@ function FileChip({
         <X className="h-3 w-3" />
       </button>
     </div>
-  )
+  );
 }
 
 // ---------------------------------------------------------------------------
@@ -287,11 +287,11 @@ function FileChip({
 
 function fileToDataURL(file: File): Promise<string> {
   return new Promise((resolve, reject) => {
-    const reader = new FileReader()
-    reader.onload = () => resolve(reader.result as string)
-    reader.onerror = reject
-    reader.readAsDataURL(file)
-  })
+    const reader = new FileReader();
+    reader.onload = () => resolve(reader.result as string);
+    reader.onerror = reject;
+    reader.readAsDataURL(file);
+  });
 }
 
 // ---------------------------------------------------------------------------
@@ -303,99 +303,99 @@ export function ChatCardCreator({
   initialMessages,
   chatId,
 }: ChatCardCreatorProps) {
-  const [input, setInput] = useState('')
-  const [files, setFiles] = useState<FileAttachment[]>([])
-  const [isDragging, setIsDragging] = useState(false)
-  const fileInputRef = useRef<HTMLInputElement>(null)
-  const textareaRef = useRef<HTMLTextAreaElement>(null)
-  const messagesEndRef = useRef<HTMLDivElement>(null)
+  const [input, setInput] = useState("");
+  const [files, setFiles] = useState<FileAttachment[]>([]);
+  const [isDragging, setIsDragging] = useState(false);
+  const fileInputRef = useRef<HTMLInputElement>(null);
+  const textareaRef = useRef<HTMLTextAreaElement>(null);
+  const messagesEndRef = useRef<HTMLDivElement>(null);
 
   const { messages, sendMessage, status } = useChat({
     id: chatId,
     messages: initialMessages,
     transport: new DefaultChatTransport({
-      api: '/api/chat/cards',
+      api: "/api/chat/cards",
       body: { deckId, chatId },
     }),
     sendAutomaticallyWhen: lastAssistantMessageIsCompleteWithToolCalls,
-  })
+  });
 
-  const isLoading = status === 'streaming' || status === 'submitted'
+  const isLoading = status === "streaming" || status === "submitted";
 
   const addedCount = messages
-    .filter((m) => m.role === 'assistant')
+    .filter((m) => m.role === "assistant")
     .flatMap((m) => m.parts)
     .filter(
       (p) =>
-        p.type === 'tool-cardAdd' &&
-        'state' in p &&
-        p.state === 'output-available',
-    ).length
+        p.type === "tool-cardAdd" &&
+        "state" in p &&
+        p.state === "output-available",
+    ).length;
 
   useEffect(() => {
-    messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' })
-  }, [messages, isLoading])
+    messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
+  }, [messages, isLoading]);
 
   async function handleFileSelect(selectedFiles: FileList) {
-    const newFiles: FileAttachment[] = []
+    const newFiles: FileAttachment[] = [];
     for (const file of Array.from(selectedFiles)) {
-      const url = await fileToDataURL(file)
-      newFiles.push({ name: file.name, type: file.type, url })
+      const url = await fileToDataURL(file);
+      newFiles.push({ name: file.name, type: file.type, url });
     }
-    setFiles((prev) => [...prev, ...newFiles])
+    setFiles((prev) => [...prev, ...newFiles]);
   }
 
   function handleDragOver(e: DragEvent) {
-    e.preventDefault()
-    setIsDragging(true)
+    e.preventDefault();
+    setIsDragging(true);
   }
 
   function handleDragLeave(e: DragEvent) {
-    e.preventDefault()
-    setIsDragging(false)
+    e.preventDefault();
+    setIsDragging(false);
   }
 
   function handleDrop(e: DragEvent) {
-    e.preventDefault()
-    setIsDragging(false)
+    e.preventDefault();
+    setIsDragging(false);
     if (e.dataTransfer.files.length > 0) {
-      handleFileSelect(e.dataTransfer.files)
+      handleFileSelect(e.dataTransfer.files);
     }
   }
 
   function removeFile(index: number) {
-    setFiles((prev) => prev.filter((_, i) => i !== index))
+    setFiles((prev) => prev.filter((_, i) => i !== index));
   }
 
   function handleSubmit() {
-    if (!input.trim() && files.length === 0) return
+    if (!input.trim() && files.length === 0) return;
 
     const parts: Array<
-      | { type: 'text'; text: string }
-      | { type: 'file'; mediaType: string; url: string }
-    > = []
+      | { type: "text"; text: string }
+      | { type: "file"; mediaType: string; url: string }
+    > = [];
 
     if (input.trim()) {
-      parts.push({ type: 'text', text: input.trim() })
+      parts.push({ type: "text", text: input.trim() });
     }
 
     for (const file of files) {
-      parts.push({ type: 'file', mediaType: file.type, url: file.url })
+      parts.push({ type: "file", mediaType: file.type, url: file.url });
     }
 
-    sendMessage({ parts })
-    setInput('')
-    setFiles([])
+    sendMessage({ parts });
+    setInput("");
+    setFiles([]);
   }
 
   function handleKeyDown(e: React.KeyboardEvent) {
-    if (e.key === 'Enter' && !e.shiftKey) {
-      e.preventDefault()
-      handleSubmit()
+    if (e.key === "Enter" && !e.shiftKey) {
+      e.preventDefault();
+      handleSubmit();
     }
   }
 
-  const canSend = input.trim() || files.length > 0
+  const canSend = input.trim() || files.length > 0;
 
   return (
     <div className="flex h-[calc(100vh-73px)] flex-col">
@@ -410,8 +410,8 @@ export function ChatCardCreator({
           {messages.length === 0 && (
             <EmptyState
               onSuggestionClick={(text) => {
-                setInput(text)
-                textareaRef.current?.focus()
+                setInput(text);
+                textareaRef.current?.focus();
               }}
             />
           )}
@@ -420,7 +420,7 @@ export function ChatCardCreator({
             <MessageRow key={message.id} message={message} />
           ))}
 
-          {isLoading && messages.at(-1)?.role !== 'assistant' && (
+          {isLoading && messages.at(-1)?.role !== "assistant" && (
             <div className="flex items-start gap-3">
               <AiAvatar />
               <div className="flex items-center gap-2 pt-1.5 text-[13px] text-muted-foreground">
@@ -486,8 +486,8 @@ export function ChatCardCreator({
                 accept="image/*,.pdf,.txt,.md,.csv"
                 className="hidden"
                 onChange={(e) => {
-                  if (e.target.files) handleFileSelect(e.target.files)
-                  e.target.value = ''
+                  if (e.target.files) handleFileSelect(e.target.files);
+                  e.target.value = "";
                 }}
               />
               <button
@@ -509,10 +509,10 @@ export function ChatCardCreator({
               />
               <button
                 className={cn(
-                  'flex h-8 w-8 shrink-0 items-center justify-center rounded-lg transition-all',
+                  "flex h-8 w-8 shrink-0 items-center justify-center rounded-lg transition-all",
                   canSend
-                    ? 'bg-primary text-primary-foreground shadow-sm'
-                    : 'text-muted-foreground/40',
+                    ? "bg-primary text-primary-foreground shadow-sm"
+                    : "text-muted-foreground/40",
                 )}
                 onClick={handleSubmit}
                 disabled={isLoading || !canSend}
@@ -524,5 +524,5 @@ export function ChatCardCreator({
         </div>
       </div>
     </div>
-  )
+  );
 }

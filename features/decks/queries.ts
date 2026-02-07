@@ -5,7 +5,7 @@ import { db } from "@/db";
 import { decks } from "./schema";
 import { cards } from "@/features/cards/schema";
 import { cardProgress } from "@/features/study/schema";
-import { eq, lte, and, count } from "drizzle-orm";
+import { eq, lte, and, count, desc } from "drizzle-orm";
 
 /**
  * 덱 단건 조회 (request-scoped dedup + cross-request cache)
@@ -30,7 +30,7 @@ export async function getDecksWithCardCounts() {
   "use cache";
   cacheTag("decks");
 
-  const allDecks = await db.select().from(decks).orderBy(decks.createdAt);
+  const allDecks = await db.select().from(decks).orderBy(desc(decks.createdAt));
 
   const result = await Promise.all(
     allDecks.map(async (deck) => {

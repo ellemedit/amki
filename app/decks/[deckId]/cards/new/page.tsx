@@ -1,24 +1,24 @@
-import { randomUUID } from 'crypto'
-import Link from 'next/link'
-import { Button } from '@/components/ui/button'
-import { Check } from 'lucide-react'
-import { BackButton } from '@/components/back-button'
-import { getLatestChatSession } from '@/features/chat/queries'
-import { ChatCardCreator } from './chat-card-creator'
-import type { UIMessage } from 'ai'
+import { randomUUID } from "crypto";
+import Link from "next/link";
+import { Button } from "@/components/ui/button";
+import { Check } from "lucide-react";
+import { BackButton } from "@/components/back-button";
+import { getLatestChatSession } from "@/features/chat/queries";
+import { ChatCardCreator } from "./chat-card-creator";
+import type { UIMessage } from "ai";
 
 interface Props {
-  params: Promise<{ deckId: string }>
+  params: Promise<{ deckId: string }>;
 }
 
 export default async function NewCardPage({ params }: Props) {
-  const { deckId } = await params
-  const session = await getLatestChatSession(deckId)
+  const { deckId } = await params;
+  const session = await getLatestChatSession(deckId);
 
-  const chatId = session?.id ?? randomUUID()
+  const chatId = session?.id ?? randomUUID();
   const initialMessages = session
     ? (session.messages as UIMessage[])
-    : undefined
+    : undefined;
 
   return (
     <div className="flex min-h-screen flex-col bg-background">
@@ -48,5 +48,5 @@ export default async function NewCardPage({ params }: Props) {
         initialMessages={initialMessages}
       />
     </div>
-  )
+  );
 }
