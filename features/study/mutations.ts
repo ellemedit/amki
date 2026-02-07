@@ -1,36 +1,23 @@
 import { db } from "@/db";
 import { cardProgress, reviewLogs } from "./schema";
-import { eq } from "drizzle-orm";
 import type { SM2Result } from "@/lib/sm2";
 
 export async function upsertProgress(cardId: string, result: SM2Result) {
-  const [existing] = await db
-    .select({ id: cardProgress.id })
-    .from(cardProgress)
-    .where(eq(cardProgress.cardId, cardId))
-    .limit(1);
+  const fields = {
+    repetitions: result.repetitions,
+    easinessFactor: result.easinessFactor,
+    intervalDays: result.intervalDays,
+    nextReviewDate: result.nextReviewDate,
+    status: result.status,
+  };
 
-  if (existing) {
-    await db
-      .update(cardProgress)
-      .set({
-        repetitions: result.repetitions,
-        easinessFactor: result.easinessFactor,
-        intervalDays: result.intervalDays,
-        nextReviewDate: result.nextReviewDate,
-        status: result.status,
-      })
-      .where(eq(cardProgress.cardId, cardId));
-  } else {
-    await db.insert(cardProgress).values({
-      cardId,
-      repetitions: result.repetitions,
-      easinessFactor: result.easinessFactor,
-      intervalDays: result.intervalDays,
-      nextReviewDate: result.nextReviewDate,
-      status: result.status,
+  await db
+    .insert(cardProgress)
+    .values({ cardId, ...fields })
+    .onConflictDoUpdate({
+      target: cardProgress.cardId,
+      set: fields,
     });
-  }
 }
 
 export async function insertReviewLog(data: {

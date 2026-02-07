@@ -1,21 +1,22 @@
-import { Suspense } from "react";
-import Link from "next/link";
-import { notFound } from "next/navigation";
-import { getDeck } from "@/features/decks/queries";
-import { getCardsWithProgress } from "@/features/cards/queries";
-import { Button } from "@/components/ui/button";
-import { Card, CardContent } from "@/components/ui/card";
-import { Badge } from "@/components/ui/badge";
-import { Separator } from "@/components/ui/separator";
-import { Skeleton } from "@/components/ui/skeleton";
-import { ArrowLeft, Plus, Play, Trash2 } from "lucide-react";
-import { updateTag } from "next/cache";
-import { redirect } from "next/navigation";
-import { deleteDeckById } from "@/features/decks/mutations";
-import { deleteCardById } from "@/features/cards/mutations";
+import { Suspense } from 'react'
+import Link from 'next/link'
+import { notFound } from 'next/navigation'
+import { getDeck } from '@/features/decks/queries'
+import { getCardsWithProgress } from '@/features/cards/queries'
+import { Button } from '@/components/ui/button'
+import { Card, CardContent } from '@/components/ui/card'
+import { Badge } from '@/components/ui/badge'
+import { Separator } from '@/components/ui/separator'
+import { Skeleton } from '@/components/ui/skeleton'
+import { Plus, Play, Trash2 } from 'lucide-react'
+import { BackButton } from '@/components/back-button'
+import { updateTag } from 'next/cache'
+import { redirect } from 'next/navigation'
+import { deleteDeckById } from '@/features/decks/mutations'
+import { deleteCardById } from '@/features/cards/mutations'
 
 interface Props {
-  params: Promise<{ deckId: string }>;
+  params: Promise<{ deckId: string }>
 }
 
 // ---------------------------------------------------------------------------
@@ -23,7 +24,7 @@ interface Props {
 // ---------------------------------------------------------------------------
 
 export default async function DeckDetailPage({ params }: Props) {
-  const { deckId } = await params;
+  const { deckId } = await params
 
   return (
     <div className="min-h-screen bg-background">
@@ -43,7 +44,7 @@ export default async function DeckDetailPage({ params }: Props) {
         </Suspense>
       </main>
     </div>
-  );
+  )
 }
 
 // ---------------------------------------------------------------------------
@@ -51,17 +52,13 @@ export default async function DeckDetailPage({ params }: Props) {
 // ---------------------------------------------------------------------------
 
 async function DeckHeader({ deckId }: { deckId: string }) {
-  const deck = await getDeck(deckId);
-  if (!deck) notFound();
+  const deck = await getDeck(deckId)
+  if (!deck) notFound()
 
   return (
     <header className="border-b">
       <div className="mx-auto flex max-w-4xl items-center gap-4 px-6 py-4">
-        <Link href="/">
-          <Button variant="ghost" size="icon">
-            <ArrowLeft className="h-4 w-4" />
-          </Button>
-        </Link>
+        <BackButton />
         <div className="flex-1">
           <h1 className="text-2xl font-bold tracking-tight">{deck.name}</h1>
           {deck.description && (
@@ -70,12 +67,12 @@ async function DeckHeader({ deckId }: { deckId: string }) {
         </div>
         <form
           action={async () => {
-            "use server";
-            await deleteDeckById(deckId);
-            updateTag("decks");
-            updateTag(`deck-${deckId}`);
-            updateTag(`cards-${deckId}`);
-            redirect("/");
+            'use server'
+            await deleteDeckById(deckId)
+            updateTag('decks')
+            updateTag(`deck-${deckId}`)
+            updateTag(`cards-${deckId}`)
+            redirect('/')
           }}
         >
           <Button variant="ghost" size="icon" className="text-destructive">
@@ -84,7 +81,7 @@ async function DeckHeader({ deckId }: { deckId: string }) {
         </form>
       </div>
     </header>
-  );
+  )
 }
 
 // ---------------------------------------------------------------------------
@@ -92,18 +89,18 @@ async function DeckHeader({ deckId }: { deckId: string }) {
 // ---------------------------------------------------------------------------
 
 async function DeckStatsAndActions({ deckId }: { deckId: string }) {
-  const cardsWithProgress = await getCardsWithProgress(deckId);
+  const cardsWithProgress = await getCardsWithProgress(deckId)
 
-  const now = new Date();
-  const total = cardsWithProgress.length;
-  const newCount = cardsWithProgress.filter((c) => !c.progress).length;
+  const now = new Date()
+  const total = cardsWithProgress.length
+  const newCount = cardsWithProgress.filter((c) => !c.progress).length
   const learningCount = cardsWithProgress.filter(
-    (c) => c.progress?.status === "learning",
-  ).length;
+    (c) => c.progress?.status === 'learning',
+  ).length
   const reviewCount = cardsWithProgress.filter(
     (c) => c.progress && c.progress.nextReviewDate <= now,
-  ).length;
-  const dueCount = newCount + reviewCount;
+  ).length
+  const dueCount = newCount + reviewCount
 
   return (
     <>
@@ -155,7 +152,7 @@ async function DeckStatsAndActions({ deckId }: { deckId: string }) {
         </Link>
       </div>
     </>
-  );
+  )
 }
 
 // ---------------------------------------------------------------------------
@@ -163,7 +160,7 @@ async function DeckStatsAndActions({ deckId }: { deckId: string }) {
 // ---------------------------------------------------------------------------
 
 async function DeckCardList({ deckId }: { deckId: string }) {
-  const cardsWithProgress = await getCardsWithProgress(deckId);
+  const cardsWithProgress = await getCardsWithProgress(deckId)
 
   if (cardsWithProgress.length === 0) {
     return (
@@ -175,7 +172,7 @@ async function DeckCardList({ deckId }: { deckId: string }) {
           </Button>
         </Link>
       </div>
-    );
+    )
   }
 
   return (
@@ -192,34 +189,34 @@ async function DeckCardList({ deckId }: { deckId: string }) {
             </div>
             <div className="flex items-center gap-2">
               <Badge
-                variant={card.type === "subjective" ? "default" : "secondary"}
+                variant={card.type === 'subjective' ? 'default' : 'secondary'}
               >
-                {card.type === "subjective" ? "주관식" : "기본"}
+                {card.type === 'subjective' ? '주관식' : '기본'}
               </Badge>
               {card.progress && (
                 <Badge
                   variant="outline"
                   className={
-                    card.progress.status === "new"
-                      ? "border-blue-500 text-blue-500"
-                      : card.progress.status === "learning"
-                        ? "border-orange-500 text-orange-500"
-                        : "border-green-500 text-green-500"
+                    card.progress.status === 'new'
+                      ? 'border-blue-500 text-blue-500'
+                      : card.progress.status === 'learning'
+                        ? 'border-orange-500 text-orange-500'
+                        : 'border-green-500 text-green-500'
                   }
                 >
-                  {card.progress.status === "new"
-                    ? "새 카드"
-                    : card.progress.status === "learning"
-                      ? "학습 중"
-                      : "복습"}
+                  {card.progress.status === 'new'
+                    ? '새 카드'
+                    : card.progress.status === 'learning'
+                      ? '학습 중'
+                      : '복습'}
                 </Badge>
               )}
               <form
                 action={async () => {
-                  "use server";
-                  await deleteCardById(card.id);
-                  updateTag(`cards-${deckId}`);
-                  updateTag("decks");
+                  'use server'
+                  await deleteCardById(card.id)
+                  updateTag(`cards-${deckId}`)
+                  updateTag('decks')
                 }}
               >
                 <Button
@@ -235,7 +232,7 @@ async function DeckCardList({ deckId }: { deckId: string }) {
         </Card>
       ))}
     </div>
-  );
+  )
 }
 
 // ---------------------------------------------------------------------------
@@ -253,7 +250,7 @@ function HeaderSkeleton() {
         </div>
       </div>
     </header>
-  );
+  )
 }
 
 function StatsSkeleton() {
@@ -272,7 +269,7 @@ function StatsSkeleton() {
         <Skeleton className="h-10 w-28" />
       </div>
     </>
-  );
+  )
 }
 
 function CardListSkeleton() {
@@ -285,5 +282,5 @@ function CardListSkeleton() {
         </div>
       ))}
     </div>
-  );
+  )
 }

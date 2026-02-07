@@ -1,79 +1,74 @@
-"use client";
+'use client'
 
-import { useReducer, useTransition } from "react";
-import Link from "next/link";
-import { useParams } from "next/navigation";
-import { createCard } from "./actions";
-import { Button } from "@/components/ui/button";
+import { useReducer, useTransition } from 'react'
+import Link from 'next/link'
+import { useParams } from 'next/navigation'
+import { createCard } from './actions'
+import { Button } from '@/components/ui/button'
 import {
   Card,
   CardContent,
   CardDescription,
   CardHeader,
   CardTitle,
-} from "@/components/ui/card";
-import { Label } from "@/components/ui/label";
-import { Textarea } from "@/components/ui/textarea";
+} from '@/components/ui/card'
+import { Label } from '@/components/ui/label'
+import { Textarea } from '@/components/ui/textarea'
 import {
   Select,
   SelectContent,
   SelectItem,
   SelectTrigger,
   SelectValue,
-} from "@/components/ui/select";
-import { ArrowLeft, Plus, Check } from "lucide-react";
-import { toast } from "sonner";
+} from '@/components/ui/select'
+import { Plus, Check } from 'lucide-react'
+import { BackButton } from '@/components/back-button'
+import { toast } from 'sonner'
 
 type State = {
-  type: "basic" | "subjective";
-  addedCount: number;
-};
+  type: 'basic' | 'subjective'
+  addedCount: number
+}
 
-type Action =
-  | { kind: "SET_TYPE"; type: State["type"] }
-  | { kind: "CARD_ADDED" };
+type Action = { kind: 'SET_TYPE'; type: State['type'] } | { kind: 'CARD_ADDED' }
 
 function reducer(state: State, action: Action): State {
   switch (action.kind) {
-    case "SET_TYPE":
-      return { ...state, type: action.type };
-    case "CARD_ADDED":
-      return { ...state, addedCount: state.addedCount + 1 };
+    case 'SET_TYPE':
+      return { ...state, type: action.type }
+    case 'CARD_ADDED':
+      return { ...state, addedCount: state.addedCount + 1 }
   }
 }
 
-const initialState: State = { type: "basic", addedCount: 0 };
+const initialState: State = { type: 'basic', addedCount: 0 }
 
 export default function NewCardPage() {
-  const params = useParams<{ deckId: string }>();
-  const [state, dispatch] = useReducer(reducer, initialState);
-  const [isPending, startTransition] = useTransition();
+  const params = useParams<{ deckId: string }>()
+  const [state, dispatch] = useReducer(reducer, initialState)
+  const [isPending, startTransition] = useTransition()
 
   async function handleSubmit(formData: FormData) {
-    formData.set("type", state.type);
+    formData.set('type', state.type)
 
-    const result = await createCard(params.deckId, formData);
+    const result = await createCard(params.deckId, formData)
 
     startTransition(async () => {
       if (result?.error) {
-        toast.error(result.error);
-        return;
+        toast.error(result.error)
+        return
       }
 
-      dispatch({ kind: "CARD_ADDED" });
-      toast.success("카드가 추가되었습니다.");
-    });
+      dispatch({ kind: 'CARD_ADDED' })
+      toast.success('카드가 추가되었습니다.')
+    })
   }
 
   return (
     <div className="min-h-screen bg-background">
       <header className="border-b">
         <div className="mx-auto flex max-w-4xl items-center gap-4 px-6 py-4">
-          <Link href={`/decks/${params.deckId}`}>
-            <Button variant="ghost" size="icon">
-              <ArrowLeft className="h-4 w-4" />
-            </Button>
-          </Link>
+          <BackButton />
           <div className="flex-1">
             <h1 className="text-2xl font-bold tracking-tight">카드 추가</h1>
             {state.addedCount > 0 && (
@@ -107,7 +102,7 @@ export default function NewCardPage() {
                 <Select
                   value={state.type}
                   onValueChange={(v) =>
-                    dispatch({ kind: "SET_TYPE", type: v as State["type"] })
+                    dispatch({ kind: 'SET_TYPE', type: v as State['type'] })
                   }
                 >
                   <SelectTrigger>
@@ -146,12 +141,12 @@ export default function NewCardPage() {
               </div>
               <Button type="submit" disabled={isPending} className="w-full">
                 <Plus className="mr-2 h-4 w-4" />
-                {isPending ? "추가 중..." : "카드 추가"}
+                {isPending ? '추가 중...' : '카드 추가'}
               </Button>
             </form>
           </CardContent>
         </Card>
       </main>
     </div>
-  );
+  )
 }

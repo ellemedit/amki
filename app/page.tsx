@@ -1,17 +1,17 @@
-import { Suspense } from "react";
-import Link from "next/link";
-import { getDecksWithStats } from "@/features/decks/queries";
-import { Button } from "@/components/ui/button";
+import { Suspense } from 'react'
+import Link from 'next/link'
+import { getDecksWithCardCounts, getDueCount } from '@/features/decks/queries'
+import { Button } from '@/components/ui/button'
 import {
   Card,
   CardContent,
   CardDescription,
   CardHeader,
   CardTitle,
-} from "@/components/ui/card";
-import { Badge } from "@/components/ui/badge";
-import { Skeleton } from "@/components/ui/skeleton";
-import { Plus, BookOpen } from "lucide-react";
+} from '@/components/ui/card'
+import { Badge } from '@/components/ui/badge'
+import { Skeleton } from '@/components/ui/skeleton'
+import { Plus, BookOpen } from 'lucide-react'
 
 // --- Static shell (prerendered) ---
 
@@ -40,15 +40,15 @@ export default function HomePage() {
         </Suspense>
       </main>
     </div>
-  );
+  )
 }
 
-// --- Cached data boundary (use cache via getDecksWithStats) ---
+// --- Cached data boundary (덱 목록 + 카드 수는 캐시) ---
 
 async function DeckList() {
-  const decksWithStats = await getDecksWithStats();
+  const decks = await getDecksWithCardCounts()
 
-  if (decksWithStats.length === 0) {
+  if (decks.length === 0) {
     return (
       <div className="flex flex-col items-center justify-center py-24 text-center">
         <BookOpen className="mb-4 h-12 w-12 text-muted-foreground" />
@@ -62,12 +62,12 @@ async function DeckList() {
           </Button>
         </Link>
       </div>
-    );
+    )
   }
 
   return (
     <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-      {decksWithStats.map((deck) => (
+      {decks.map((deck) => (
         <Link key={deck.id} href={`/decks/${deck.id}`}>
           <Card className="transition-colors hover:bg-accent/50">
             <CardHeader className="pb-3">
@@ -81,16 +81,28 @@ async function DeckList() {
             <CardContent>
               <div className="flex items-center gap-2">
                 <Badge variant="secondary">{deck.totalCards}장</Badge>
-                {deck.dueCards > 0 && (
-                  <Badge variant="default">{deck.dueCards}장 복습 대기</Badge>
-                )}
+                <Suspense
+                  fallback={<Skeleton className="h-5 w-20 rounded-full" />}
+                >
+                  <DueBadge deckId={deck.id} />
+                </Suspense>
               </div>
             </CardContent>
           </Card>
         </Link>
       ))}
     </div>
-  );
+  )
+}
+
+// --- Dynamic data boundary (복습 대기 수는 항상 실시간) ---
+
+async function DueBadge({ deckId }: { deckId: string }) {
+  const dueCards = await getDueCount(deckId)
+
+  if (dueCards <= 0) return null
+
+  return <Badge variant="default">{dueCards}장 복습 대기</Badge>
 }
 
 // --- Skeleton fallback ---
@@ -109,5 +121,5 @@ function DeckListSkeleton() {
         </div>
       ))}
     </div>
-  );
+  )
 }

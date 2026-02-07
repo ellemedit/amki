@@ -1,38 +1,38 @@
-import Link from "next/link";
-import { z } from "zod";
-import { updateTag } from "next/cache";
-import { redirect } from "next/navigation";
-import { insertDeck } from "@/features/decks/mutations";
-import { Button } from "@/components/ui/button";
+import Link from 'next/link'
+import { z } from 'zod'
+import { updateTag } from 'next/cache'
+import { redirect } from 'next/navigation'
+import { insertDeck } from '@/features/decks/mutations'
+import { Button } from '@/components/ui/button'
 import {
   Card,
   CardContent,
   CardDescription,
   CardHeader,
   CardTitle,
-} from "@/components/ui/card";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import { Textarea } from "@/components/ui/textarea";
-import { ArrowLeft } from "lucide-react";
+} from '@/components/ui/card'
+import { Input } from '@/components/ui/input'
+import { Label } from '@/components/ui/label'
+import { Textarea } from '@/components/ui/textarea'
+import { BackButton } from '@/components/back-button'
 
 const deckSchema = z.object({
-  name: z.string().trim().min(1, "덱 이름을 입력해주세요."),
-  description: z.string().trim().default(""),
-});
+  name: z.string().trim().min(1, '덱 이름을 입력해주세요.'),
+  description: z.string().trim().default(''),
+})
 
 async function createDeck(formData: FormData) {
-  "use server";
+  'use server'
   const result = deckSchema.safeParse({
-    name: formData.get("name"),
-    description: formData.get("description") ?? "",
-  });
+    name: formData.get('name'),
+    description: formData.get('description') ?? '',
+  })
   if (!result.success) {
-    throw new Error(result.error.issues[0].message);
+    throw new Error(result.error.issues[0].message)
   }
-  const deck = await insertDeck(result.data);
-  updateTag("decks");
-  redirect(`/decks/${deck.id}`);
+  const deck = await insertDeck(result.data)
+  updateTag('decks')
+  redirect(`/decks/${deck.id}`)
 }
 
 export default function NewDeckPage() {
@@ -40,11 +40,7 @@ export default function NewDeckPage() {
     <div className="min-h-screen bg-background">
       <header className="border-b">
         <div className="mx-auto flex max-w-4xl items-center gap-4 px-6 py-4">
-          <Link href="/">
-            <Button variant="ghost" size="icon">
-              <ArrowLeft className="h-4 w-4" />
-            </Button>
-          </Link>
+          <BackButton />
           <div>
             <h1 className="text-2xl font-bold tracking-tight">새 덱 만들기</h1>
           </div>
@@ -91,5 +87,5 @@ export default function NewDeckPage() {
         </Card>
       </main>
     </div>
-  );
+  )
 }
