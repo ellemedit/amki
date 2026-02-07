@@ -1,0 +1,8 @@
+.next
+out
+build
+node_modules
+bun.lock
+.agents
+.cursor
+AGENTS.md
