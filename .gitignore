@@ -13,6 +13,11 @@
 # testing
 /coverage
 
+# testing
+test-results/
+playwright-report/
+blob-report/
+
 # next.js
 /.next/
 /out/
