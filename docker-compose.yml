@@ -1,0 +1,15 @@
+services:
+  postgres:
+    image: postgres:17-alpine
+    container_name: amki-postgres
+    ports:
+      - "5432:5432"
+    environment:
+      POSTGRES_USER: amki
+      POSTGRES_PASSWORD: amki
+      POSTGRES_DB: amki
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+
+volumes:
+  pgdata:
