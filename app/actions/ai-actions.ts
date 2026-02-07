@@ -1,6 +1,6 @@
 'use server'
 
-import { generateObject } from 'ai'
+import { generateText, Output } from 'ai'
 import { openai } from '@ai-sdk/openai'
 import { z } from 'zod'
 
@@ -22,9 +22,9 @@ export async function gradeSubjectiveAnswer(
   userAnswer: string,
 ): Promise<{ quality: number; feedback: string }> {
   try {
-    const { object } = await generateObject({
+    const { output } = await generateText({
       model: openai('gpt-4o-mini'),
-      schema: gradingSchema,
+      output: Output.object({ schema: gradingSchema }),
       prompt: `You are a flashcard study assistant grading a student's answer.
 Compare the student's answer against the correct answer and grade it on the SM-2 scale (0-5).
 
@@ -45,7 +45,10 @@ Grading criteria:
 Provide your feedback in Korean. Be concise (1-2 sentences).`,
     })
 
-    return object
+    if (!output) {
+      throw new Error('AI가 유효한 응답을 생성하지 못했습니다.')
+    }
+    return output
   } catch {
     // Fallback: simple string comparison if AI is not available
     const { calculateSimpleSimilarity } = await import('@/lib/similarity')

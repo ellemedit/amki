@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useTransition } from 'react'
+import { useReducer, useTransition } from 'react'
 import Link from 'next/link'
 import { submitReview, type StudyCard } from '@/app/actions/study-actions'
 import { gradeSubjectiveAnswer } from '@/app/actions/ai-actions'
@@ -26,30 +26,65 @@ interface Props {
 
 type Phase = 'question' | 'answer' | 'grading'
 
-export function StudySession({ deck, initialCards }: Props) {
-  const [cards] = useState(initialCards)
-  const [currentIndex, setCurrentIndex] = useState(0)
-  const [phase, setPhase] = useState<Phase>('question')
-  const [userAnswer, setUserAnswer] = useState('')
-  const [aiFeedback, setAiFeedback] = useState<{
-    quality: number
-    feedback: string
-  } | null>(null)
-  const [isPending, startTransition] = useTransition()
-  const [completedCount, setCompletedCount] = useState(0)
+type State = {
+  cards: StudyCard[]
+  currentIndex: number
+  phase: Phase
+  userAnswer: string
+  aiFeedback: { quality: number; feedback: string } | null
+  completedCount: number
+}
 
+type Action =
+  | { kind: 'SHOW_ANSWER' }
+  | { kind: 'START_GRADING' }
+  | { kind: 'SET_FEEDBACK'; feedback: { quality: number; feedback: string } }
+  | { kind: 'SET_USER_ANSWER'; value: string }
+  | { kind: 'NEXT_CARD' }
+
+function reducer(state: State, action: Action): State {
+  switch (action.kind) {
+    case 'SHOW_ANSWER':
+      return { ...state, phase: 'answer' }
+    case 'START_GRADING':
+      return { ...state, phase: 'grading' }
+    case 'SET_FEEDBACK':
+      return { ...state, aiFeedback: action.feedback, phase: 'answer' }
+    case 'SET_USER_ANSWER':
+      return { ...state, userAnswer: action.value }
+    case 'NEXT_CARD':
+      return {
+        ...state,
+        currentIndex: state.currentIndex + 1,
+        completedCount: state.completedCount + 1,
+        phase: 'question',
+        userAnswer: '',
+        aiFeedback: null,
+      }
+  }
+}
+
+export function StudySession({ deck, initialCards }: Props) {
+  const [state, dispatch] = useReducer(reducer, {
+    cards: initialCards,
+    currentIndex: 0,
+    phase: 'question',
+    userAnswer: '',
+    aiFeedback: null,
+    completedCount: 0,
+  })
+  const [isPending, startTransition] = useTransition()
+
+  const { cards, currentIndex, phase, userAnswer, aiFeedback, completedCount } =
+    state
   const currentCard = cards[currentIndex]
   const isFinished = currentIndex >= cards.length
   const progressPercent =
     cards.length > 0 ? (completedCount / cards.length) * 100 : 0
 
-  function handleShowAnswer() {
-    setPhase('answer')
-  }
-
-  async function handleGradeSubjective() {
+  function handleGradeSubjective() {
     if (!currentCard || !userAnswer.trim()) return
-    setPhase('grading')
+    dispatch({ kind: 'START_GRADING' })
 
     startTransition(async () => {
       const result = await gradeSubjectiveAnswer(
@@ -57,8 +92,7 @@ export function StudySession({ deck, initialCards }: Props) {
         currentCard.back,
         userAnswer,
       )
-      setAiFeedback(result)
-      setPhase('answer')
+      dispatch({ kind: 'SET_FEEDBACK', feedback: result })
     })
   }
 
@@ -73,12 +107,7 @@ export function StudySession({ deck, initialCards }: Props) {
         currentCard.type === 'subjective' ? userAnswer : undefined,
         aiFeedback?.feedback,
       )
-
-      setCompletedCount((c) => c + 1)
-      setCurrentIndex((i) => i + 1)
-      setPhase('question')
-      setUserAnswer('')
-      setAiFeedback(null)
+      dispatch({ kind: 'NEXT_CARD' })
     })
   }
 
@@ -168,7 +197,9 @@ export function StudySession({ deck, initialCards }: Props) {
           <div className="mb-6 space-y-3">
             <Textarea
               value={userAnswer}
-              onChange={(e) => setUserAnswer(e.target.value)}
+              onChange={(e) =>
+                dispatch({ kind: 'SET_USER_ANSWER', value: e.target.value })
+              }
               placeholder="답을 입력하세요..."
               rows={4}
               autoFocus
@@ -186,7 +217,11 @@ export function StudySession({ deck, initialCards }: Props) {
 
         {/* Show answer button for basic cards */}
         {currentCard.type === 'basic' && phase === 'question' && (
-          <Button onClick={handleShowAnswer} className="mb-6 w-full" size="lg">
+          <Button
+            onClick={() => dispatch({ kind: 'SHOW_ANSWER' })}
+            className="mb-6 w-full"
+            size="lg"
+          >
             답 보기
           </Button>
         )}

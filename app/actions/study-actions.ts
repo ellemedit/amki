@@ -4,7 +4,7 @@ import { db } from '@/db'
 import { cards, cardProgress, reviewLogs } from '@/db/schema'
 import { eq, lte, and, inArray } from 'drizzle-orm'
 import { calculateSM2, SM2_DEFAULTS } from '@/lib/sm2'
-import { revalidatePath } from 'next/cache'
+import { updateTag } from 'next/cache'
 
 export interface StudyCard {
   id: string
@@ -145,8 +145,8 @@ export async function submitReview(
     aiFeedback: aiFeedback ?? null,
   })
 
-  revalidatePath(`/decks/${deckId}`)
-  revalidatePath(`/decks/${deckId}/study`)
+  updateTag(`cards-${deckId}`)
+  updateTag('decks')
 
   return result
 }

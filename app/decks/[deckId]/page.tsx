@@ -1,12 +1,12 @@
+import { Suspense } from 'react'
 import Link from 'next/link'
 import { notFound } from 'next/navigation'
-import { db } from '@/db'
-import { decks, cards, cardProgress } from '@/db/schema'
-import { eq } from 'drizzle-orm'
+import { getDeckDetail } from '@/lib/queries'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
 import { Separator } from '@/components/ui/separator'
+import { Skeleton } from '@/components/ui/skeleton'
 import { ArrowLeft, Plus, Play, Trash2 } from 'lucide-react'
 import { deleteDeck } from '@/app/actions/deck-actions'
 import { deleteCard } from '@/app/actions/card-actions'
@@ -15,58 +15,23 @@ interface Props {
   params: Promise<{ deckId: string }>
 }
 
-async function getDeckDetail(deckId: string) {
-  const [deck] = await db
-    .select()
-    .from(decks)
-    .where(eq(decks.id, deckId))
-    .limit(1)
-
-  if (!deck) return null
-
-  const deckCards = await db
-    .select()
-    .from(cards)
-    .where(eq(cards.deckId, deckId))
-    .orderBy(cards.createdAt)
-
-  // Get progress for each card
-  const cardsWithProgress = await Promise.all(
-    deckCards.map(async (card) => {
-      const [progress] = await db
-        .select()
-        .from(cardProgress)
-        .where(eq(cardProgress.cardId, card.id))
-        .limit(1)
-      return { ...card, progress: progress ?? null }
-    }),
-  )
-
-  const now = new Date()
-  const newCount = cardsWithProgress.filter((c) => !c.progress).length
-  const learningCount = cardsWithProgress.filter(
-    (c) => c.progress?.status === 'learning',
-  ).length
-  const reviewCount = cardsWithProgress.filter(
-    (c) => c.progress && c.progress.nextReviewDate <= now,
-  ).length
-  const dueCount = newCount + reviewCount
-
-  return {
-    deck,
-    cards: cardsWithProgress,
-    stats: {
-      total: deckCards.length,
-      newCount,
-      learningCount,
-      reviewCount,
-      dueCount,
-    },
-  }
-}
+// --- Page shell: awaits params (runtime data), wraps content in Suspense ---
 
 export default async function DeckDetailPage({ params }: Props) {
   const { deckId } = await params
+
+  return (
+    <div className="min-h-screen bg-background">
+      <Suspense fallback={<DeckDetailSkeleton />}>
+        <DeckDetailContent deckId={deckId} />
+      </Suspense>
+    </div>
+  )
+}
+
+// --- Cached data boundary (use cache via getDeckDetail) ---
+
+async function DeckDetailContent({ deckId }: { deckId: string }) {
   const data = await getDeckDetail(deckId)
 
   if (!data) notFound()
@@ -74,7 +39,7 @@ export default async function DeckDetailPage({ params }: Props) {
   const { deck, cards: deckCards, stats } = data
 
   return (
-    <div className="min-h-screen bg-background">
+    <>
       <header className="border-b">
         <div className="mx-auto flex max-w-4xl items-center gap-4 px-6 py-4">
           <Link href="/">
@@ -229,6 +194,46 @@ export default async function DeckDetailPage({ params }: Props) {
           </div>
         )}
       </main>
-    </div>
+    </>
+  )
+}
+
+// --- Skeleton fallback ---
+
+function DeckDetailSkeleton() {
+  return (
+    <>
+      <header className="border-b">
+        <div className="mx-auto flex max-w-4xl items-center gap-4 px-6 py-4">
+          <Skeleton className="h-10 w-10 rounded" />
+          <div className="flex-1">
+            <Skeleton className="mb-2 h-7 w-48" />
+            <Skeleton className="h-4 w-64" />
+          </div>
+        </div>
+      </header>
+      <main className="mx-auto max-w-4xl px-6 py-8">
+        <div className="mb-6 grid grid-cols-2 gap-4 sm:grid-cols-4">
+          {Array.from({ length: 4 }).map((_, i) => (
+            <div key={i} className="rounded-lg border p-4">
+              <Skeleton className="mb-1 h-8 w-12" />
+              <Skeleton className="h-3 w-16" />
+            </div>
+          ))}
+        </div>
+        <div className="mb-6 flex gap-3">
+          <Skeleton className="h-10 w-36" />
+          <Skeleton className="h-10 w-28" />
+        </div>
+        <div className="space-y-3">
+          {Array.from({ length: 5 }).map((_, i) => (
+            <div key={i} className="rounded-lg border p-4">
+              <Skeleton className="mb-2 h-5 w-3/4" />
+              <Skeleton className="h-4 w-1/2" />
+            </div>
+          ))}
+        </div>
+      </main>
+    </>
   )
 }
