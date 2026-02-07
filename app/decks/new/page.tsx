@@ -1,5 +1,8 @@
 import Link from 'next/link'
-import { createDeck } from '@/app/actions/deck-actions'
+import { z } from 'zod'
+import { updateTag } from 'next/cache'
+import { redirect } from 'next/navigation'
+import { insertDeck } from '@/features/decks/mutations'
 import { Button } from '@/components/ui/button'
 import {
   Card,
@@ -12,6 +15,25 @@ import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Textarea } from '@/components/ui/textarea'
 import { ArrowLeft } from 'lucide-react'
+
+const deckSchema = z.object({
+  name: z.string().trim().min(1, '덱 이름을 입력해주세요.'),
+  description: z.string().trim().default(''),
+})
+
+async function createDeck(formData: FormData) {
+  'use server'
+  const result = deckSchema.safeParse({
+    name: formData.get('name'),
+    description: formData.get('description') ?? '',
+  })
+  if (!result.success) {
+    throw new Error(result.error.issues[0].message)
+  }
+  const deck = await insertDeck(result.data)
+  updateTag('decks')
+  redirect(`/decks/${deck.id}`)
+}
 
 export default function NewDeckPage() {
   return (

@@ -1,5 +1,5 @@
 import { pgTable, text, timestamp, uuid, varchar } from 'drizzle-orm/pg-core'
-import { decks } from './decks'
+import { decks } from '@/features/decks/schema'
 
 export const cardTypeEnum = ['basic', 'subjective'] as const
 export type CardType = (typeof cardTypeEnum)[number]

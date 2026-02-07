@@ -2,8 +2,8 @@
 
 import { useReducer, useTransition } from 'react'
 import Link from 'next/link'
-import { submitReview, type StudyCard } from '@/app/actions/study-actions'
-import { gradeSubjectiveAnswer } from '@/app/actions/ai-actions'
+import { submitReview, gradeSubjectiveAnswer } from './actions'
+import { type StudyCard } from '@/features/study/queries'
 import { getQualityLabel } from '@/lib/sm2'
 import { Button } from '@/components/ui/button'
 import {
@@ -17,7 +17,7 @@ import { Badge } from '@/components/ui/badge'
 import { Textarea } from '@/components/ui/textarea'
 import { Progress } from '@/components/ui/progress'
 import { ArrowLeft, RotateCcw, Sparkles } from 'lucide-react'
-import type { Deck } from '@/db/schema'
+import type { Deck } from '@/features/decks/schema'
 
 interface Props {
   deck: Deck

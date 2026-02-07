@@ -2,11 +2,14 @@ import {
   integer,
   pgTable,
   real,
+  text,
   timestamp,
   uuid,
   varchar,
 } from 'drizzle-orm/pg-core'
-import { cards } from './cards'
+import { cards } from '@/features/cards/schema'
+
+// --- Card Progress ---
 
 export const cardProgressStatusEnum = ['new', 'learning', 'review'] as const
 export type CardProgressStatus = (typeof cardProgressStatusEnum)[number]
@@ -32,3 +35,21 @@ export const cardProgress = pgTable('card_progress', {
 
 export type CardProgress = typeof cardProgress.$inferSelect
 export type NewCardProgress = typeof cardProgress.$inferInsert
+
+// --- Review Logs ---
+
+export const reviewLogs = pgTable('review_logs', {
+  id: uuid('id').primaryKey().defaultRandom(),
+  cardId: uuid('card_id')
+    .notNull()
+    .references(() => cards.id, { onDelete: 'cascade' }),
+  quality: integer('quality').notNull(),
+  userAnswer: text('user_answer'),
+  aiFeedback: text('ai_feedback'),
+  reviewedAt: timestamp('reviewed_at', { withTimezone: true })
+    .notNull()
+    .defaultNow(),
+})
+
+export type ReviewLog = typeof reviewLogs.$inferSelect
+export type NewReviewLog = typeof reviewLogs.$inferInsert

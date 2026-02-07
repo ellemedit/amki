@@ -1,8 +1,56 @@
 'use server'
 
+import { updateTag } from 'next/cache'
 import { generateText, Output } from 'ai'
 import { openai } from '@ai-sdk/openai'
 import { z } from 'zod'
+import { db } from '@/db'
+import { cardProgress } from '@/features/study/schema'
+import { eq } from 'drizzle-orm'
+import { calculateSM2, SM2_DEFAULTS } from '@/lib/sm2'
+import { upsertProgress, insertReviewLog } from '@/features/study/mutations'
+
+// ---------------------------------------------------------------------------
+// submitReview
+// ---------------------------------------------------------------------------
+
+export async function submitReview(
+  cardId: string,
+  deckId: string,
+  quality: number,
+  userAnswer?: string,
+  aiFeedback?: string,
+) {
+  const [existing] = await db
+    .select()
+    .from(cardProgress)
+    .where(eq(cardProgress.cardId, cardId))
+    .limit(1)
+
+  const result = calculateSM2({
+    quality,
+    repetitions: existing?.repetitions ?? SM2_DEFAULTS.repetitions,
+    easinessFactor: existing?.easinessFactor ?? SM2_DEFAULTS.easinessFactor,
+    intervalDays: existing?.intervalDays ?? SM2_DEFAULTS.intervalDays,
+  })
+
+  await upsertProgress(cardId, result)
+  await insertReviewLog({
+    cardId,
+    quality,
+    userAnswer: userAnswer ?? null,
+    aiFeedback: aiFeedback ?? null,
+  })
+
+  updateTag(`cards-${deckId}`)
+  updateTag('decks')
+
+  return result
+}
+
+// ---------------------------------------------------------------------------
+// gradeSubjectiveAnswer
+// ---------------------------------------------------------------------------
 
 const gradingSchema = z.object({
   quality: z
@@ -10,7 +58,9 @@ const gradingSchema = z.object({
     .int()
     .min(0)
     .max(5)
-    .describe('SM-2 quality rating: 0=complete blackout, 1=wrong, 2=barely remembered, 3=correct with difficulty, 4=correct with hesitation, 5=perfect'),
+    .describe(
+      'SM-2 quality rating: 0=complete blackout, 1=wrong, 2=barely remembered, 3=correct with difficulty, 4=correct with hesitation, 5=perfect',
+    ),
   feedback: z
     .string()
     .describe('Brief feedback in Korean explaining the grading result'),
@@ -50,7 +100,6 @@ Provide your feedback in Korean. Be concise (1-2 sentences).`,
     }
     return output
   } catch {
-    // Fallback: simple string comparison if AI is not available
     const { calculateSimpleSimilarity } = await import('@/lib/similarity')
     const similarity = calculateSimpleSimilarity(correctAnswer, userAnswer)
     let quality: number
@@ -68,4 +117,3 @@ Provide your feedback in Korean. Be concise (1-2 sentences).`,
     }
   }
 }
-

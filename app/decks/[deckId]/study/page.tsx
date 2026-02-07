@@ -1,7 +1,7 @@
 import { Suspense } from 'react'
 import { connection } from 'next/server'
-import { getStudyCards } from '@/app/actions/study-actions'
-import { getDeckById } from '@/lib/queries'
+import { getStudyCards } from '@/features/study/queries'
+import { getDeck } from '@/features/decks/queries'
 import { notFound } from 'next/navigation'
 import { StudySession } from './study-session'
 import { Skeleton } from '@/components/ui/skeleton'
@@ -26,7 +26,7 @@ async function StudyContent({ deckId }: { deckId: string }) {
   // Explicitly opt into request-time rendering for fresh due-date data
   await connection()
 
-  const deck = await getDeckById(deckId)
+  const deck = await getDeck(deckId)
   if (!deck) notFound()
 
   const studyCards = await getStudyCards(deckId)

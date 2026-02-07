@@ -3,7 +3,7 @@
 import { useReducer, useTransition } from 'react'
 import Link from 'next/link'
 import { useParams } from 'next/navigation'
-import { createCard } from '@/app/actions/card-actions'
+import { createCard } from './actions'
 import { Button } from '@/components/ui/button'
 import {
   Card,

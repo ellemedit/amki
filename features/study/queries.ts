@@ -1,10 +1,7 @@
-'use server'
-
 import { db } from '@/db'
-import { cards, cardProgress, reviewLogs } from '@/db/schema'
+import { cards } from '@/features/cards/schema'
+import { cardProgress } from './schema'
 import { eq, lte, and, inArray } from 'drizzle-orm'
-import { calculateSM2, SM2_DEFAULTS } from '@/lib/sm2'
-import { updateTag } from 'next/cache'
 
 export interface StudyCard {
   id: string
@@ -19,6 +16,9 @@ export interface StudyCard {
   } | null
 }
 
+/**
+ * 학습 대상 카드 조회 (항상 동적 — 캐시하지 않음)
+ */
 export async function getStudyCards(deckId: string): Promise<StudyCard[]> {
   const now = new Date()
 
@@ -62,9 +62,7 @@ export async function getStudyCards(deckId: string): Promise<StudyCard[]> {
     const newCardData = await db
       .select()
       .from(cards)
-      .where(
-        and(eq(cards.deckId, deckId), inArray(cards.id, newCardIds)),
-      )
+      .where(and(eq(cards.deckId, deckId), inArray(cards.id, newCardIds)))
     newCards = newCardData.map((c) => ({
       id: c.id,
       front: c.front,
@@ -87,68 +85,7 @@ export async function getStudyCards(deckId: string): Promise<StudyCard[]> {
     },
   }))
 
-  // Shuffle: new cards first, then due cards
   return [...shuffleArray(newCards), ...shuffleArray(dueStudyCards)]
-}
-
-export async function submitReview(
-  cardId: string,
-  deckId: string,
-  quality: number,
-  userAnswer?: string,
-  aiFeedback?: string,
-) {
-  // Get existing progress
-  const [existing] = await db
-    .select()
-    .from(cardProgress)
-    .where(eq(cardProgress.cardId, cardId))
-    .limit(1)
-
-  const input = {
-    quality,
-    repetitions: existing?.repetitions ?? SM2_DEFAULTS.repetitions,
-    easinessFactor: existing?.easinessFactor ?? SM2_DEFAULTS.easinessFactor,
-    intervalDays: existing?.intervalDays ?? SM2_DEFAULTS.intervalDays,
-  }
-
-  const result = calculateSM2(input)
-
-  // Upsert progress
-  if (existing) {
-    await db
-      .update(cardProgress)
-      .set({
-        repetitions: result.repetitions,
-        easinessFactor: result.easinessFactor,
-        intervalDays: result.intervalDays,
-        nextReviewDate: result.nextReviewDate,
-        status: result.status,
-      })
-      .where(eq(cardProgress.cardId, cardId))
-  } else {
-    await db.insert(cardProgress).values({
-      cardId,
-      repetitions: result.repetitions,
-      easinessFactor: result.easinessFactor,
-      intervalDays: result.intervalDays,
-      nextReviewDate: result.nextReviewDate,
-      status: result.status,
-    })
-  }
-
-  // Log review
-  await db.insert(reviewLogs).values({
-    cardId,
-    quality,
-    userAnswer: userAnswer ?? null,
-    aiFeedback: aiFeedback ?? null,
-  })
-
-  updateTag(`cards-${deckId}`)
-  updateTag('decks')
-
-  return result
 }
 
 function shuffleArray<T>(array: T[]): T[] {

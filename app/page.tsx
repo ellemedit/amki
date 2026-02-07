@@ -1,6 +1,6 @@
 import { Suspense } from 'react'
 import Link from 'next/link'
-import { getDecksWithStats } from '@/lib/queries'
+import { getDecksWithStats } from '@/features/decks/queries'
 import { Button } from '@/components/ui/button'
 import {
   Card,
