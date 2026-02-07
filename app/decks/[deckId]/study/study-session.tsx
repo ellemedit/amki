@@ -15,9 +15,15 @@ import {
 import { Badge } from '@/components/ui/badge'
 import { Textarea } from '@/components/ui/textarea'
 import { Progress } from '@/components/ui/progress'
-import { ArrowLeft, RotateCcw, Sparkles } from 'lucide-react'
+import { ArrowLeft, RotateCcw, Sparkles, CheckCircle2 } from 'lucide-react'
 import { useRouter } from 'next/navigation'
 import type { Deck } from '@/features/decks/schema'
+import { Markdown } from '@/components/markdown'
+import { cn } from '@/lib/utils'
+
+// ---------------------------------------------------------------------------
+// Types & Reducer
+// ---------------------------------------------------------------------------
 
 interface Props {
   deck: Deck
@@ -63,6 +69,81 @@ function reducer(state: State, action: Action): State {
       }
   }
 }
+
+// ---------------------------------------------------------------------------
+// Lookup: quality button styles
+// ---------------------------------------------------------------------------
+
+const qualityStyles: Record<number, string> = {
+  0: 'border-red-500/20 bg-red-500/5 text-red-400 hover:bg-red-500/10',
+  1: 'border-red-500/20 bg-red-500/5 text-red-400 hover:bg-red-500/10',
+  2: 'border-border/60 bg-card text-muted-foreground hover:bg-muted',
+  3: 'border-amber-500/25 bg-amber-500/10 text-amber-400 hover:bg-amber-500/15',
+  4: 'border-emerald-500/25 bg-emerald-500/10 text-emerald-400 hover:bg-emerald-500/15',
+  5: 'border-emerald-500/25 bg-emerald-500/10 text-emerald-400 hover:bg-emerald-500/15',
+}
+
+// ---------------------------------------------------------------------------
+// Sub-components
+// ---------------------------------------------------------------------------
+
+function AIFeedbackDisplay({
+  feedback,
+}: {
+  feedback: { quality: number; feedback: string }
+}) {
+  return (
+    <div className="mt-5 rounded-xl border border-primary/15 bg-primary/4 p-4">
+      <div className="mb-2 flex items-center gap-2">
+        <Sparkles className="h-3.5 w-3.5 text-primary" />
+        <span className="text-xs font-medium">AI 채점 결과</span>
+        <Badge variant="secondary" className="text-xs">
+          {getQualityLabel(feedback.quality)} ({feedback.quality}/5)
+        </Badge>
+      </div>
+      <p className="whitespace-pre-wrap text-[13px] leading-relaxed text-muted-foreground">
+        {feedback.feedback}
+      </p>
+    </div>
+  )
+}
+
+function QualityRatingGrid({
+  onRate,
+  disabled,
+}: {
+  onRate: (quality: number) => void
+  disabled: boolean
+}) {
+  return (
+    <div className="space-y-4">
+      <p className="text-center text-[13px] text-muted-foreground">
+        얼마나 잘 알고 있었나요?
+      </p>
+      <div className="grid grid-cols-3 gap-2 sm:grid-cols-6">
+        {[0, 1, 2, 3, 4, 5].map((q) => (
+          <button
+            key={q}
+            onClick={() => onRate(q)}
+            disabled={disabled}
+            className={cn(
+              'flex flex-col items-center gap-0.5 rounded-xl border px-2 py-3 text-center transition-all',
+              'hover:scale-[1.02] active:scale-[0.98] disabled:pointer-events-none disabled:opacity-50',
+              qualityStyles[q],
+            )}
+          >
+            <span className="text-lg font-semibold">{q}</span>
+            <span className="text-[10px]">{getQualityLabel(q)}</span>
+          </button>
+        ))}
+      </div>
+    </div>
+  )
+}
+
+// ---------------------------------------------------------------------------
+// Main
+// ---------------------------------------------------------------------------
 
 export function StudySession({ deck, initialCards }: Props) {
   const router = useRouter()
@@ -114,8 +195,8 @@ export function StudySession({ deck, initialCards }: Props) {
 
   if (cards.length === 0) {
     return (
-      <div className="flex min-h-screen items-center justify-center bg-background">
-        <Card className="mx-auto max-w-md">
+      <div className="flex min-h-screen items-center justify-center bg-background px-5">
+        <Card className="mx-auto max-w-sm">
           <CardHeader className="text-center">
             <CardTitle>복습할 카드가 없습니다</CardTitle>
             <CardDescription>
@@ -135,61 +216,68 @@ export function StudySession({ deck, initialCards }: Props) {
 
   if (isFinished) {
     return (
-      <div className="flex min-h-screen items-center justify-center bg-background">
-        <Card className="mx-auto max-w-md">
-          <CardHeader className="text-center">
-            <CardTitle>학습 완료!</CardTitle>
-            <CardDescription>
-              {completedCount}장의 카드를 복습했습니다.
-            </CardDescription>
-          </CardHeader>
-          <CardContent className="flex justify-center gap-3">
-            <Button onClick={() => router.back()}>
-              <ArrowLeft className="mr-2 h-4 w-4" />
-              덱으로 돌아가기
-            </Button>
-          </CardContent>
-        </Card>
+      <div className="flex min-h-screen items-center justify-center bg-background px-5">
+        <div className="mx-auto max-w-sm text-center">
+          <div className="mx-auto mb-6 flex h-16 w-16 items-center justify-center rounded-2xl bg-emerald-500/10 ring-1 ring-emerald-500/20">
+            <CheckCircle2 className="h-8 w-8 text-emerald-400" />
+          </div>
+          <h2 className="mb-2 text-xl font-semibold tracking-tight">
+            학습 완료
+          </h2>
+          <p className="mb-8 text-sm text-muted-foreground">
+            {completedCount}장의 카드를 복습했습니다
+          </p>
+          <Button onClick={() => router.back()} size="lg">
+            <ArrowLeft className="mr-2 h-4 w-4" />
+            덱으로 돌아가기
+          </Button>
+        </div>
       </div>
     )
   }
 
   return (
     <div className="min-h-screen bg-background">
-      <header className="border-b">
-        <div className="mx-auto flex max-w-4xl items-center gap-4 px-6 py-4">
+      {/* Header */}
+      <header className="border-b border-border/50">
+        <div className="mx-auto flex max-w-3xl items-center gap-4 px-5 py-4">
           <Button variant="ghost" size="icon" onClick={() => router.back()}>
             <ArrowLeft className="h-4 w-4" />
           </Button>
           <div className="flex-1">
-            <h1 className="text-lg font-bold tracking-tight">{deck.name}</h1>
-            <p className="text-sm text-muted-foreground">
+            <h1 className="text-base font-semibold tracking-tight">
+              {deck.name}
+            </h1>
+            <p className="text-xs text-muted-foreground">
               {completedCount} / {cards.length}
             </p>
           </div>
-          <Badge variant="outline">
+          <Badge
+            variant="outline"
+            className="border-border/60 text-xs text-muted-foreground"
+          >
             {currentCard.type === 'subjective' ? '주관식' : '기본'}
           </Badge>
         </div>
-        <div className="mx-auto max-w-4xl px-6 pb-2">
-          <Progress value={progressPercent} className="h-1.5" />
+        <div className="mx-auto max-w-3xl px-5 pb-3">
+          <Progress value={progressPercent} className="h-1" />
         </div>
       </header>
 
-      <main className="mx-auto max-w-2xl px-6 py-8">
+      <main className="mx-auto max-w-[600px] px-5 py-10">
         {/* Question */}
-        <Card className="mb-6">
-          <CardHeader>
-            <CardDescription>질문</CardDescription>
-            <CardTitle className="text-xl leading-relaxed whitespace-pre-wrap">
-              {currentCard.front}
-            </CardTitle>
-          </CardHeader>
-        </Card>
+        <div className="mb-8 rounded-2xl border border-border/60 bg-card px-6 py-5 shadow-sm">
+          <p className="mb-3 text-xs font-medium uppercase tracking-wider text-muted-foreground">
+            질문
+          </p>
+          <div className="text-[17px] font-medium leading-relaxed">
+            <Markdown>{currentCard.front}</Markdown>
+          </div>
+        </div>
 
         {/* Subjective answer input */}
         {currentCard.type === 'subjective' && phase === 'question' && (
-          <div className="mb-6 space-y-3">
+          <div className="mb-8 space-y-3">
             <Textarea
               value={userAnswer}
               onChange={(e) =>
@@ -197,12 +285,14 @@ export function StudySession({ deck, initialCards }: Props) {
               }
               placeholder="답을 입력하세요..."
               rows={4}
+              className="text-[14px]"
               autoFocus
             />
             <Button
               onClick={handleGradeSubjective}
               disabled={!userAnswer.trim() || isPending}
               className="w-full"
+              size="lg"
             >
               <Sparkles className="mr-2 h-4 w-4" />
               {isPending ? 'AI 채점 중...' : 'AI 채점 받기'}
@@ -214,7 +304,7 @@ export function StudySession({ deck, initialCards }: Props) {
         {currentCard.type === 'basic' && phase === 'question' && (
           <Button
             onClick={() => dispatch({ kind: 'SHOW_ANSWER' })}
-            className="mb-6 w-full"
+            className="mb-8 w-full"
             size="lg"
           >
             답 보기
@@ -223,79 +313,32 @@ export function StudySession({ deck, initialCards }: Props) {
 
         {/* Grading spinner */}
         {phase === 'grading' && (
-          <Card className="mb-6">
-            <CardContent className="flex items-center justify-center py-8">
-              <div className="flex items-center gap-3 text-muted-foreground">
-                <RotateCcw className="h-5 w-5 animate-spin" />
-                <span>AI가 답안을 채점하고 있습니다...</span>
-              </div>
-            </CardContent>
-          </Card>
+          <div className="mb-8 flex items-center justify-center rounded-2xl border border-dashed border-border/60 py-10">
+            <div className="flex items-center gap-3 text-sm text-muted-foreground">
+              <RotateCcw className="h-4 w-4 animate-spin" />
+              <span>AI가 답안을 채점하고 있습니다...</span>
+            </div>
+          </div>
         )}
 
         {/* Answer */}
         {phase === 'answer' && (
           <>
-            <Card className="mb-6">
-              <CardHeader>
-                <CardDescription>정답</CardDescription>
-                <CardTitle className="text-xl leading-relaxed whitespace-pre-wrap">
-                  {currentCard.back}
-                </CardTitle>
-              </CardHeader>
-
-              {/* AI feedback for subjective */}
-              {aiFeedback && (
-                <CardContent>
-                  <div className="rounded-lg border bg-muted/50 p-4">
-                    <div className="mb-2 flex items-center gap-2">
-                      <Sparkles className="h-4 w-4 text-primary" />
-                      <span className="font-medium">AI 채점 결과</span>
-                      <Badge variant="secondary">
-                        {getQualityLabel(aiFeedback.quality)} (
-                        {aiFeedback.quality}/5)
-                      </Badge>
-                    </div>
-                    <p className="text-sm text-muted-foreground whitespace-pre-wrap">
-                      {aiFeedback.feedback}
-                    </p>
-                  </div>
-                </CardContent>
-              )}
-            </Card>
-
-            {/* Quality rating buttons */}
-            <div className="space-y-3">
-              <p className="text-center text-sm text-muted-foreground">
-                얼마나 잘 알고 있었나요?
+            <div className="mb-8 rounded-2xl border border-border/60 bg-card px-6 py-5 shadow-sm">
+              <p className="mb-3 text-xs font-medium uppercase tracking-wider text-muted-foreground">
+                정답
               </p>
-              <div className="grid grid-cols-3 gap-2 sm:grid-cols-6">
-                {[0, 1, 2, 3, 4, 5].map((q) => (
-                  <Button
-                    key={q}
-                    variant={q >= 3 ? 'default' : 'outline'}
-                    size="sm"
-                    onClick={() => handleQualityRate(q)}
-                    disabled={isPending}
-                    className={
-                      q >= 4
-                        ? 'bg-green-600 hover:bg-green-700 text-white'
-                        : q === 3
-                          ? 'bg-orange-500 hover:bg-orange-600 text-white'
-                          : q <= 1
-                            ? 'border-destructive text-destructive'
-                            : ''
-                    }
-                  >
-                    <span className="text-xs">
-                      {q}
-                      <br />
-                      {getQualityLabel(q)}
-                    </span>
-                  </Button>
-                ))}
+              <div className="text-[15px] leading-[1.8]">
+                <Markdown>{currentCard.back}</Markdown>
               </div>
+
+              {aiFeedback && <AIFeedbackDisplay feedback={aiFeedback} />}
             </div>
+
+            <QualityRatingGrid
+              onRate={handleQualityRate}
+              disabled={isPending}
+            />
           </>
         )}
       </main>

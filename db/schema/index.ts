@@ -16,3 +16,9 @@ export {
   type ReviewLog,
   type NewReviewLog,
 } from "@/features/study/schema";
+
+export {
+  chatSessions,
+  type ChatSession,
+  type NewChatSession,
+} from "@/features/chat/schema";

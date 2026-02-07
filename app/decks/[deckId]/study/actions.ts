@@ -2,7 +2,7 @@
 
 import { updateTag } from "next/cache";
 import { generateText, Output } from "ai";
-import { openai } from "@ai-sdk/openai";
+import { anthropic } from "@ai-sdk/anthropic";
 import { z } from "zod";
 import { db } from "@/db";
 import { cardProgress } from "@/features/study/schema";
@@ -66,6 +66,18 @@ const gradingSchema = z.object({
     .describe("Brief feedback in Korean explaining the grading result"),
 });
 
+const similarityThresholds = [
+  [0.9, 5],
+  [0.7, 4],
+  [0.5, 3],
+  [0.3, 2],
+  [0.1, 1],
+] as const;
+
+function qualityFromSimilarity(similarity: number): number {
+  return similarityThresholds.find(([t]) => similarity >= t)?.[1] ?? 0;
+}
+
 export async function gradeSubjectiveAnswer(
   question: string,
   correctAnswer: string,
@@ -73,7 +85,7 @@ export async function gradeSubjectiveAnswer(
 ): Promise<{ quality: number; feedback: string }> {
   try {
     const { output } = await generateText({
-      model: openai("gpt-4o-mini"),
+      model: anthropic("claude-sonnet-4-20250514"),
       output: Output.object({ schema: gradingSchema }),
       prompt: `You are a flashcard study assistant grading a student's answer.
 Compare the student's answer against the correct answer and grade it on the SM-2 scale (0-5).
@@ -102,18 +114,11 @@ Provide your feedback in Korean. Be concise (1-2 sentences).`,
   } catch {
     const { calculateSimpleSimilarity } = await import("@/lib/similarity");
     const similarity = calculateSimpleSimilarity(correctAnswer, userAnswer);
-    let quality: number;
-    if (similarity >= 0.9) quality = 5;
-    else if (similarity >= 0.7) quality = 4;
-    else if (similarity >= 0.5) quality = 3;
-    else if (similarity >= 0.3) quality = 2;
-    else if (similarity >= 0.1) quality = 1;
-    else quality = 0;
 
     return {
-      quality,
+      quality: qualityFromSimilarity(similarity),
       feedback:
-        "AI 채점을 사용할 수 없어 텍스트 유사도로 채점했습니다. OPENAI_API_KEY를 설정해주세요.",
+        "AI 채점을 사용할 수 없어 텍스트 유사도로 채점했습니다. ANTHROPIC_API_KEY를 설정해주세요.",
     };
   }
 }

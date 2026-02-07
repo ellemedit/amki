@@ -1,36 +1,59 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# Amki - 스마트 암기 카드
 
-## Getting Started
+SM-2 알고리즘 기반 간격 반복 학습 앱. AI와 대화하며 학습 자료에서 암기 카드를 자동 생성할 수 있습니다.
 
-First, run the development server:
+## 주요 기능
+
+- **AI 카드 생성** - 텍스트, 이미지, PDF를 업로드하면 Claude가 핵심 개념을 카드로 만들어 줍니다
+- **간격 반복 학습** - SM-2 알고리즘으로 최적의 복습 시점을 자동 계산
+- **주관식 채점** - AI가 서술형 답안을 채점하고 피드백 제공
+- **덱 관리** - 주제별로 카드를 덱으로 분류
+
+## 기술 스택
+
+- **프레임워크** - Next.js 16 (App Router, React Compiler)
+- **AI** - Vercel AI SDK + Anthropic Claude
+- **DB** - PostgreSQL + Drizzle ORM
+- **UI** - Tailwind CSS v4 + shadcn/ui
+- **테스트** - Vitest + Playwright
+
+## 시작하기
+
+### 1. 환경 변수 설정
 
 ```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
+cp .env.sample .env.local
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+`.env.local`을 열고 `ANTHROPIC_API_KEY`를 입력하세요.
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+### 2. DB 실행
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+```bash
+docker compose up -d
+```
 
-## Learn More
+### 3. DB 마이그레이션
 
-To learn more about Next.js, take a look at the following resources:
+```bash
+bun run db:push
+```
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+### 4. 개발 서버
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+```bash
+bun run dev
+```
 
-## Deploy on Vercel
+[http://localhost:3000](http://localhost:3000)에서 확인할 수 있습니다.
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+## 스크립트
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+| 명령어              | 설명                |
+| ------------------- | ------------------- |
+| `bun run dev`       | 개발 서버 실행      |
+| `bun run build`     | 프로덕션 빌드       |
+| `bun run test`      | 단위 테스트         |
+| `bun run test:e2e`  | E2E 테스트          |
+| `bun run db:push`   | DB 스키마 동기화    |
+| `bun run db:studio` | Drizzle Studio 실행 |
