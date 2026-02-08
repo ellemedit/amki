@@ -1,4 +1,3 @@
-import { cache } from "react";
 import { cacheTag, revalidateTag, updateTag } from "next/cache";
 import { db } from "@/db";
 import { cards } from "./schema";
@@ -19,7 +18,7 @@ export function revalidateCardsCache(deckId: string) {
 /**
  * 카드 + 학습 진행도 목록 (request-scoped dedup + cross-request cache)
  */
-export const getCardsWithProgress = cache(async (deckId: string) => {
+export const getCardsWithProgress = async (deckId: string) => {
   "use cache";
   cacheTag(getCardsCacheKey(deckId));
 
@@ -41,4 +40,4 @@ export const getCardsWithProgress = cache(async (deckId: string) => {
   );
 
   return withProgress;
-});
+};

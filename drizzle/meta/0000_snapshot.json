@@ -70,12 +70,8 @@
           "name": "card_progress_card_id_cards_id_fk",
           "tableFrom": "card_progress",
           "tableTo": "cards",
-          "columnsFrom": [
-            "card_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["card_id"],
+          "columnsTo": ["id"],
           "onDelete": "cascade",
           "onUpdate": "no action"
         }
@@ -85,9 +81,7 @@
         "card_progress_card_id_unique": {
           "name": "card_progress_card_id_unique",
           "nullsNotDistinct": false,
-          "columns": [
-            "card_id"
-          ]
+          "columns": ["card_id"]
         }
       },
       "policies": {},
@@ -151,12 +145,8 @@
           "name": "cards_deck_id_decks_id_fk",
           "tableFrom": "cards",
           "tableTo": "decks",
-          "columnsFrom": [
-            "deck_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["deck_id"],
+          "columnsTo": ["id"],
           "onDelete": "cascade",
           "onUpdate": "no action"
         }
@@ -212,12 +202,8 @@
           "name": "chat_sessions_deck_id_decks_id_fk",
           "tableFrom": "chat_sessions",
           "tableTo": "decks",
-          "columnsFrom": [
-            "deck_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["deck_id"],
+          "columnsTo": ["id"],
           "onDelete": "cascade",
           "onUpdate": "no action"
         }
@@ -324,12 +310,8 @@
           "name": "review_logs_card_id_cards_id_fk",
           "tableFrom": "review_logs",
           "tableTo": "cards",
-          "columnsFrom": [
-            "card_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["card_id"],
+          "columnsTo": ["id"],
           "onDelete": "cascade",
           "onUpdate": "no action"
         }

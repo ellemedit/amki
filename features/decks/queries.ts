@@ -1,4 +1,3 @@
-import { cache } from "react";
 import { cacheTag, revalidateTag, updateTag } from "next/cache";
 import { db } from "@/db";
 import { decks } from "./schema";
@@ -30,7 +29,7 @@ export function revalidateDecksCache() {
 /**
  * 덱 단건 조회 (request-scoped dedup + cross-request cache)
  */
-export const getDeck = cache(async (deckId: string) => {
+export const getDeck = async (deckId: string) => {
   "use cache";
   cacheTag(getDeckCacheKey(deckId));
 
@@ -41,7 +40,7 @@ export const getDeck = cache(async (deckId: string) => {
     .limit(1);
 
   return deck ?? null;
-});
+};
 
 /**
  * 전체 덱 목록 + 카드 수 (시간 무관 — cross-request cache)
@@ -91,4 +90,3 @@ export async function getDecksWithCardCounts() {
 
   return result;
 }
-

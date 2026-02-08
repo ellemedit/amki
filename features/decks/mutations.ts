@@ -2,10 +2,7 @@ import { db, type Transactable } from "@/db";
 import { decks, type WriteDeck } from "./schema";
 import { eq } from "drizzle-orm";
 
-export async function insertDeck(
-  data: WriteDeck,
-  tx: Transactable = db,
-) {
+export async function insertDeck(data: WriteDeck, tx: Transactable = db) {
   const [deck] = await tx.insert(decks).values(data).returning();
   return deck;
 }

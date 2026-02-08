@@ -1,72 +1,72 @@
-'use client'
+"use client";
 
-import { useReducer, useTransition } from 'react'
-import { submitReview, gradeSubjectiveAnswer } from './actions'
-import { type StudyCard } from '@/features/study/queries'
-import { getQualityLabel } from '@/lib/sm2'
-import { Button } from '@/components/ui/button'
+import { useReducer, useTransition } from "react";
+import { submitReview, gradeSubjectiveAnswer } from "./actions";
+import { type StudyCard } from "@/features/study/queries";
+import { getQualityLabel } from "@/lib/sm2";
+import { Button } from "@/components/ui/button";
 import {
   Card,
   CardContent,
   CardDescription,
   CardHeader,
   CardTitle,
-} from '@/components/ui/card'
-import { Badge } from '@/components/ui/badge'
-import { Textarea } from '@/components/ui/textarea'
-import { Progress } from '@/components/ui/progress'
-import { ArrowLeft, RotateCcw, Sparkles, CheckCircle2 } from 'lucide-react'
-import { useRouter } from 'next/navigation'
-import type { ReadDeck } from '@/features/decks/schema'
-import { Markdown } from '@/components/markdown'
-import { cn } from '@/lib/utils'
+} from "@/components/ui/card";
+import { Badge } from "@/components/ui/badge";
+import { Textarea } from "@/components/ui/textarea";
+import { Progress } from "@/components/ui/progress";
+import { ArrowLeft, RotateCcw, Sparkles, CheckCircle2 } from "lucide-react";
+import { useRouter } from "next/navigation";
+import type { ReadDeck } from "@/features/decks/schema";
+import { Markdown } from "@/components/markdown";
+import { cn } from "@/lib/utils";
 
 // ---------------------------------------------------------------------------
 // Types & Reducer
 // ---------------------------------------------------------------------------
 
 interface Props {
-  deck: ReadDeck
-  initialCards: StudyCard[]
+  deck: ReadDeck;
+  initialCards: StudyCard[];
 }
 
-type Phase = 'question' | 'answer' | 'grading'
+type Phase = "question" | "answer" | "grading";
 
 type State = {
-  cards: StudyCard[]
-  currentIndex: number
-  phase: Phase
-  userAnswer: string
-  aiFeedback: { quality: number; feedback: string } | null
-  completedCount: number
-}
+  cards: StudyCard[];
+  currentIndex: number;
+  phase: Phase;
+  userAnswer: string;
+  aiFeedback: { quality: number; feedback: string } | null;
+  completedCount: number;
+};
 
 type Action =
-  | { kind: 'SHOW_ANSWER' }
-  | { kind: 'START_GRADING' }
-  | { kind: 'SET_FEEDBACK'; feedback: { quality: number; feedback: string } }
-  | { kind: 'SET_USER_ANSWER'; value: string }
-  | { kind: 'NEXT_CARD' }
+  | { kind: "SHOW_ANSWER" }
+  | { kind: "START_GRADING" }
+  | { kind: "SET_FEEDBACK"; feedback: { quality: number; feedback: string } }
+  | { kind: "SET_USER_ANSWER"; value: string }
+  | { kind: "NEXT_CARD" };
 
 function reducer(state: State, action: Action): State {
   switch (action.kind) {
-    case 'SHOW_ANSWER':
-      return { ...state, phase: 'answer' }
-    case 'START_GRADING':
-      return { ...state, phase: 'grading' }
-    case 'SET_FEEDBACK':
-      return { ...state, aiFeedback: action.feedback, phase: 'answer' }
-    case 'SET_USER_ANSWER':
-      return { ...state, userAnswer: action.value }
-    case 'NEXT_CARD':
+    case "SHOW_ANSWER":
+      return { ...state, phase: "answer" };
+    case "START_GRADING":
+      return { ...state, phase: "grading" };
+    case "SET_FEEDBACK":
+      return { ...state, aiFeedback: action.feedback, phase: "answer" };
+    case "SET_USER_ANSWER":
+      return { ...state, userAnswer: action.value };
+    case "NEXT_CARD":
       return {
         ...state,
         currentIndex: state.currentIndex + 1,
         completedCount: state.completedCount + 1,
-        phase: 'question',
-        userAnswer: '',
+        phase: "question",
+        userAnswer: "",
         aiFeedback: null,
-      }
+      };
   }
 }
 
@@ -75,13 +75,13 @@ function reducer(state: State, action: Action): State {
 // ---------------------------------------------------------------------------
 
 const qualityStyles: Record<number, string> = {
-  0: 'border-red-500/20 bg-red-500/5 text-red-400 hover:bg-red-500/10',
-  1: 'border-red-500/20 bg-red-500/5 text-red-400 hover:bg-red-500/10',
-  2: 'border-border/60 bg-card text-muted-foreground hover:bg-muted',
-  3: 'border-amber-500/25 bg-amber-500/10 text-amber-400 hover:bg-amber-500/15',
-  4: 'border-emerald-500/25 bg-emerald-500/10 text-emerald-400 hover:bg-emerald-500/15',
-  5: 'border-emerald-500/25 bg-emerald-500/10 text-emerald-400 hover:bg-emerald-500/15',
-}
+  0: "border-red-500/20 bg-red-500/5 text-red-400 hover:bg-red-500/10",
+  1: "border-red-500/20 bg-red-500/5 text-red-400 hover:bg-red-500/10",
+  2: "border-border/60 bg-card text-muted-foreground hover:bg-muted",
+  3: "border-amber-500/25 bg-amber-500/10 text-amber-400 hover:bg-amber-500/15",
+  4: "border-emerald-500/25 bg-emerald-500/10 text-emerald-400 hover:bg-emerald-500/15",
+  5: "border-emerald-500/25 bg-emerald-500/10 text-emerald-400 hover:bg-emerald-500/15",
+};
 
 // ---------------------------------------------------------------------------
 // Sub-components
@@ -90,7 +90,7 @@ const qualityStyles: Record<number, string> = {
 function AIFeedbackDisplay({
   feedback,
 }: {
-  feedback: { quality: number; feedback: string }
+  feedback: { quality: number; feedback: string };
 }) {
   return (
     <div className="mt-5 rounded-xl border border-primary/15 bg-primary/4 p-4">
@@ -105,15 +105,15 @@ function AIFeedbackDisplay({
         {feedback.feedback}
       </p>
     </div>
-  )
+  );
 }
 
 function QualityRatingGrid({
   onRate,
   disabled,
 }: {
-  onRate: (quality: number) => void
-  disabled: boolean
+  onRate: (quality: number) => void;
+  disabled: boolean;
 }) {
   return (
     <div className="space-y-4">
@@ -127,8 +127,8 @@ function QualityRatingGrid({
             onClick={() => onRate(q)}
             disabled={disabled}
             className={cn(
-              'flex flex-col items-center gap-0.5 rounded-xl border px-2 py-3 text-center transition-all',
-              'hover:scale-[1.02] active:scale-[0.98] disabled:pointer-events-none disabled:opacity-50',
+              "flex flex-col items-center gap-0.5 rounded-xl border px-2 py-3 text-center transition-all",
+              "hover:scale-[1.02] active:scale-[0.98] disabled:pointer-events-none disabled:opacity-50",
               qualityStyles[q],
             )}
           >
@@ -138,7 +138,7 @@ function QualityRatingGrid({
         ))}
       </div>
     </div>
-  )
+  );
 }
 
 // ---------------------------------------------------------------------------
@@ -146,51 +146,51 @@ function QualityRatingGrid({
 // ---------------------------------------------------------------------------
 
 export function StudySession({ deck, initialCards }: Props) {
-  const router = useRouter()
+  const router = useRouter();
   const [state, dispatch] = useReducer(reducer, {
     cards: initialCards,
     currentIndex: 0,
-    phase: 'question',
-    userAnswer: '',
+    phase: "question",
+    userAnswer: "",
     aiFeedback: null,
     completedCount: 0,
-  })
-  const [isPending, startTransition] = useTransition()
+  });
+  const [isPending, startTransition] = useTransition();
 
   const { cards, currentIndex, phase, userAnswer, aiFeedback, completedCount } =
-    state
-  const currentCard = cards[currentIndex]
-  const isFinished = currentIndex >= cards.length
+    state;
+  const currentCard = cards[currentIndex];
+  const isFinished = currentIndex >= cards.length;
   const progressPercent =
-    cards.length > 0 ? (completedCount / cards.length) * 100 : 0
+    cards.length > 0 ? (completedCount / cards.length) * 100 : 0;
 
   function handleGradeSubjective() {
-    if (!currentCard || !userAnswer.trim()) return
-    dispatch({ kind: 'START_GRADING' })
+    if (!currentCard || !userAnswer.trim()) return;
+    dispatch({ kind: "START_GRADING" });
 
     startTransition(async () => {
       const result = await gradeSubjectiveAnswer(
         currentCard.front,
         currentCard.back,
         userAnswer,
-      )
-      dispatch({ kind: 'SET_FEEDBACK', feedback: result })
-    })
+      );
+      dispatch({ kind: "SET_FEEDBACK", feedback: result });
+    });
   }
 
   function handleQualityRate(quality: number) {
-    if (!currentCard) return
+    if (!currentCard) return;
 
     startTransition(async () => {
       await submitReview(
         currentCard.id,
         deck.id,
         quality,
-        currentCard.type === 'subjective' ? userAnswer : undefined,
+        currentCard.type === "subjective" ? userAnswer : undefined,
         aiFeedback?.feedback,
-      )
-      dispatch({ kind: 'NEXT_CARD' })
-    })
+      );
+      dispatch({ kind: "NEXT_CARD" });
+    });
   }
 
   if (cards.length === 0) {
@@ -211,7 +211,7 @@ export function StudySession({ deck, initialCards }: Props) {
           </CardContent>
         </Card>
       </div>
-    )
+    );
   }
 
   if (isFinished) {
@@ -233,7 +233,7 @@ export function StudySession({ deck, initialCards }: Props) {
           </Button>
         </div>
       </div>
-    )
+    );
   }
 
   return (
@@ -256,7 +256,7 @@ export function StudySession({ deck, initialCards }: Props) {
             variant="outline"
             className="border-border/60 text-xs text-muted-foreground"
           >
-            {currentCard.type === 'subjective' ? '주관식' : '기본'}
+            {currentCard.type === "subjective" ? "주관식" : "기본"}
           </Badge>
         </div>
         <div className="mx-auto max-w-3xl px-5 pb-3">
@@ -276,12 +276,12 @@ export function StudySession({ deck, initialCards }: Props) {
         </div>
 
         {/* Subjective answer input */}
-        {currentCard.type === 'subjective' && phase === 'question' && (
+        {currentCard.type === "subjective" && phase === "question" && (
           <div className="mb-8 space-y-3">
             <Textarea
               value={userAnswer}
               onChange={(e) =>
-                dispatch({ kind: 'SET_USER_ANSWER', value: e.target.value })
+                dispatch({ kind: "SET_USER_ANSWER", value: e.target.value })
               }
               placeholder="답을 입력하세요..."
               rows={4}
@@ -295,15 +295,15 @@ export function StudySession({ deck, initialCards }: Props) {
               size="lg"
             >
               <Sparkles className="mr-2 h-4 w-4" />
-              {isPending ? 'AI 채점 중...' : 'AI 채점 받기'}
+              {isPending ? "AI 채점 중..." : "AI 채점 받기"}
             </Button>
           </div>
         )}
 
         {/* Show answer button for basic cards */}
-        {currentCard.type === 'basic' && phase === 'question' && (
+        {currentCard.type === "basic" && phase === "question" && (
           <Button
-            onClick={() => dispatch({ kind: 'SHOW_ANSWER' })}
+            onClick={() => dispatch({ kind: "SHOW_ANSWER" })}
             className="mb-8 w-full"
             size="lg"
           >
@@ -312,7 +312,7 @@ export function StudySession({ deck, initialCards }: Props) {
         )}
 
         {/* Grading spinner */}
-        {phase === 'grading' && (
+        {phase === "grading" && (
           <div className="mb-8 flex items-center justify-center rounded-2xl border border-dashed border-border/60 py-10">
             <div className="flex items-center gap-3 text-sm text-muted-foreground">
               <RotateCcw className="h-4 w-4 animate-spin" />
@@ -322,7 +322,7 @@ export function StudySession({ deck, initialCards }: Props) {
         )}
 
         {/* Answer */}
-        {phase === 'answer' && (
+        {phase === "answer" && (
           <>
             <div className="mb-8 rounded-2xl border border-border/60 bg-card px-6 py-5 shadow-sm">
               <p className="mb-3 text-xs font-medium uppercase tracking-wider text-muted-foreground">
@@ -343,5 +343,5 @@ export function StudySession({ deck, initialCards }: Props) {
         )}
       </main>
     </div>
-  )
+  );
 }

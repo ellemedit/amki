@@ -1,10 +1,10 @@
-import { Suspense } from 'react'
-import Link from 'next/link'
-import { getDecksWithCardCounts } from '@/features/decks/queries'
-import { Button } from '@/components/ui/button'
-import { Badge } from '@/components/ui/badge'
-import { Skeleton } from '@/components/ui/skeleton'
-import { Plus, BookOpen, Layers } from 'lucide-react'
+import { Suspense } from "react";
+import Link from "next/link";
+import { getDecksWithCardCounts } from "@/features/decks/queries";
+import { Button } from "@/components/ui/button";
+import { Badge } from "@/components/ui/badge";
+import { Skeleton } from "@/components/ui/skeleton";
+import { Plus, BookOpen, Layers } from "lucide-react";
 
 // --- Static shell (prerendered) ---
 
@@ -38,13 +38,13 @@ export default function HomePage() {
         </Suspense>
       </main>
     </div>
-  )
+  );
 }
 
 // --- Cached data boundary ---
 
 async function DeckList() {
-  const decks = await getDecksWithCardCounts()
+  const decks = await getDecksWithCardCounts();
 
   if (decks.length === 0) {
     return (
@@ -64,7 +64,7 @@ async function DeckList() {
           </Button>
         </Link>
       </div>
-    )
+    );
   }
 
   return (
@@ -96,7 +96,7 @@ async function DeckList() {
         </Link>
       ))}
     </div>
-  )
+  );
 }
 
 // --- Skeleton fallback ---
@@ -117,5 +117,5 @@ function DeckListSkeleton() {
         </div>
       ))}
     </div>
-  )
+  );
 }

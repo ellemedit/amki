@@ -1,31 +1,31 @@
-import Link from 'next/link'
-import { z } from 'zod'
-import { redirect } from 'next/navigation'
-import { insertDeck } from '@/features/decks/mutations'
-import { updateDecksCache } from '@/features/decks/queries'
-import { Button } from '@/components/ui/button'
-import { Input } from '@/components/ui/input'
-import { Label } from '@/components/ui/label'
-import { Textarea } from '@/components/ui/textarea'
-import { BackButton } from '@/components/back-button'
+import Link from "next/link";
+import { z } from "zod";
+import { redirect } from "next/navigation";
+import { insertDeck } from "@/features/decks/mutations";
+import { updateDecksCache } from "@/features/decks/queries";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Textarea } from "@/components/ui/textarea";
+import { BackButton } from "@/components/back-button";
 
 const deckSchema = z.object({
-  name: z.string().trim().min(1, '덱 이름을 입력해주세요.'),
-  description: z.string().trim().default(''),
-})
+  name: z.string().trim().min(1, "덱 이름을 입력해주세요."),
+  description: z.string().trim().default(""),
+});
 
 async function createDeck(formData: FormData) {
-  'use server'
+  "use server";
   const result = deckSchema.safeParse({
-    name: formData.get('name'),
-    description: formData.get('description') ?? '',
-  })
+    name: formData.get("name"),
+    description: formData.get("description") ?? "",
+  });
   if (!result.success) {
-    throw new Error(result.error.issues[0].message)
+    throw new Error(result.error.issues[0].message);
   }
-  const deck = await insertDeck(result.data)
-  updateDecksCache()
-  redirect(`/decks/${deck.id}`)
+  const deck = await insertDeck(result.data);
+  updateDecksCache();
+  redirect(`/decks/${deck.id}`);
 }
 
 export default function NewDeckPage() {
@@ -80,5 +80,5 @@ export default function NewDeckPage() {
         </form>
       </main>
     </div>
-  )
+  );
 }
