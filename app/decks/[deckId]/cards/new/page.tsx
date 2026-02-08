@@ -13,8 +13,26 @@ interface Props {
   params: Promise<{ deckId: string }>
 }
 
-export default async function NewCardPage({ params }: Props) {
+export default function NewCardPage({ params }: Props) {
+  return (
+    <Suspense fallback={<ChatSkeleton />}>
+      <ChatContent params={params} />
+    </Suspense>
+  )
+}
+
+async function ChatContent({
+  params,
+}: {
+  params: Promise<{ deckId: string }>
+}) {
   const { deckId } = await params
+  const session = await getLatestChatSession(deckId)
+
+  const chatId = session?.id ?? randomUUID()
+  const initialMessages = session
+    ? (session.messages as UIMessage[])
+    : undefined
 
   return (
     <div className="flex min-h-screen flex-col bg-background">
@@ -38,42 +56,39 @@ export default async function NewCardPage({ params }: Props) {
         </div>
       </header>
 
-      <Suspense fallback={<ChatSkeleton />}>
-        <ChatContent deckId={deckId} />
-      </Suspense>
+      <ChatCardCreator
+        deckId={deckId}
+        chatId={chatId}
+        initialMessages={initialMessages}
+      />
     </div>
-  )
-}
-
-async function ChatContent({ deckId }: { deckId: string }) {
-  const session = await getLatestChatSession(deckId)
-
-  const chatId = session?.id ?? randomUUID()
-  const initialMessages = session
-    ? (session.messages as UIMessage[])
-    : undefined
-
-  return (
-    <ChatCardCreator
-      deckId={deckId}
-      chatId={chatId}
-      initialMessages={initialMessages}
-    />
   )
 }
 
 function ChatSkeleton() {
   return (
-    <div className="flex flex-1 flex-col">
-      <div className="flex-1 px-5 py-6">
-        <div className="mx-auto max-w-3xl space-y-4">
-          <Skeleton className="ml-auto h-10 w-48 rounded-2xl" />
-          <Skeleton className="h-24 w-64 rounded-2xl" />
+    <div className="flex min-h-screen flex-col bg-background">
+      <header className="border-b border-border/50">
+        <div className="mx-auto flex max-w-3xl items-center gap-4 px-5 py-4">
+          <Skeleton className="h-9 w-9 rounded-lg" />
+          <div className="flex-1">
+            <Skeleton className="mb-1.5 h-4 w-16" />
+            <Skeleton className="h-3 w-40" />
+          </div>
+          <Skeleton className="h-8 w-16 rounded-md" />
         </div>
-      </div>
-      <div className="border-t border-border/50 px-5 py-4">
-        <div className="mx-auto max-w-3xl">
-          <Skeleton className="h-11 w-full rounded-xl" />
+      </header>
+      <div className="flex flex-1 flex-col">
+        <div className="flex-1 px-5 py-6">
+          <div className="mx-auto max-w-3xl space-y-4">
+            <Skeleton className="ml-auto h-10 w-48 rounded-2xl" />
+            <Skeleton className="h-24 w-64 rounded-2xl" />
+          </div>
+        </div>
+        <div className="border-t border-border/50 px-5 py-4">
+          <div className="mx-auto max-w-3xl">
+            <Skeleton className="h-11 w-full rounded-xl" />
+          </div>
         </div>
       </div>
     </div>
