@@ -1,20 +1,57 @@
-import { convertToModelMessages, streamText, UIMessage, stepCountIs } from "ai";
+import {
+  convertToModelMessages,
+  createIdGenerator,
+  streamText,
+  UIMessage,
+  stepCountIs,
+  validateUIMessages,
+} from "ai";
 import { anthropic } from "@ai-sdk/anthropic";
 import { z } from "zod";
 import { insertCard } from "@/features/cards/mutations";
 import { revalidateCardsCache } from "@/features/cards/queries";
 import { revalidateDecksCache } from "@/features/decks/queries";
 import { upsertChatSession } from "@/features/chat/mutations";
+import { getChatSession } from "@/features/chat/queries";
 
 export const maxDuration = 60;
 
+const tools = {
+  cardAdd: {
+    description:
+      "덱에 새로운 암기 카드를 추가합니다. 앞면에는 질문을, 뒷면에는 답을 넣습니다.",
+    inputSchema: z.object({
+      front: z
+        .string()
+        .describe("카드 앞면 - 질문 또는 암기할 내용의 프롬프트"),
+      back: z.string().describe("카드 뒷면 - 정답 또는 암기할 내용의 설명"),
+      type: z
+        .enum(["basic", "subjective"])
+        .default("basic")
+        .describe(
+          "카드 유형: basic(답을 보고 직접 평가) 또는 subjective(AI가 답안 채점)",
+        ),
+    }),
+  },
+};
+
 export async function POST(req: Request) {
   const {
-    messages,
+    message,
     deckId,
     chatId,
-  }: { messages: UIMessage[]; deckId: string; chatId: string } =
+  }: { message: UIMessage; deckId: string; chatId: string } =
     await req.json();
+
+  // Load previous messages from DB instead of receiving all from client
+  const session = await getChatSession(chatId);
+  const previousMessages = (session?.messages as UIMessage[]) ?? [];
+
+  // Validate messages (tools may have changed between deploys)
+  const messages = await validateUIMessages({
+    messages: [...previousMessages, message],
+    tools,
+  });
 
   const result = streamText({
     model: anthropic("claude-sonnet-4-20250514"),
@@ -37,20 +74,7 @@ export async function POST(req: Request) {
     messages: await convertToModelMessages(messages),
     tools: {
       cardAdd: {
-        description:
-          "덱에 새로운 암기 카드를 추가합니다. 앞면에는 질문을, 뒷면에는 답을 넣습니다.",
-        inputSchema: z.object({
-          front: z
-            .string()
-            .describe("카드 앞면 - 질문 또는 암기할 내용의 프롬프트"),
-          back: z.string().describe("카드 뒷면 - 정답 또는 암기할 내용의 설명"),
-          type: z
-            .enum(["basic", "subjective"])
-            .default("basic")
-            .describe(
-              "카드 유형: basic(답을 보고 직접 평가) 또는 subjective(AI가 답안 채점)",
-            ),
-        }),
+        ...tools.cardAdd,
         execute: async ({
           front,
           back,
@@ -75,6 +99,8 @@ export async function POST(req: Request) {
 
   return result.toUIMessageStreamResponse({
     originalMessages: messages,
+    // Server-side message ID generation for persistence consistency
+    generateMessageId: createIdGenerator({ prefix: "msg", size: 16 }),
     onFinish: ({ messages: finalMessages }) => {
       upsertChatSession(chatId, deckId, finalMessages);
     },
