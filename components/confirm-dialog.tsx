@@ -15,25 +15,32 @@ import { Loader2 } from 'lucide-react'
 
 export function ConfirmDialog({
   trigger,
+  open: controlledOpen,
+  onOpenChange: controlledOnOpenChange,
   title,
   description,
   confirmLabel = '삭제',
   variant = 'destructive',
   onConfirm,
 }: {
-  trigger: ReactNode
+  trigger?: ReactNode
+  open?: boolean
+  onOpenChange?: (open: boolean) => void
   title: string
   description: string
   confirmLabel?: string
   variant?: 'destructive' | 'default'
   onConfirm: () => Promise<void> | void
 }) {
-  const [open, setOpen] = useState(false)
+  const [uncontrolledOpen, setUncontrolledOpen] = useState(false)
   const [isPending, startTransition] = useTransition()
+
+  const open = controlledOpen ?? uncontrolledOpen
+  const setOpen = controlledOnOpenChange ?? setUncontrolledOpen
 
   return (
     <Dialog open={open} onOpenChange={setOpen}>
-      <DialogTrigger asChild>{trigger}</DialogTrigger>
+      {trigger && <DialogTrigger asChild>{trigger}</DialogTrigger>}
       <DialogContent>
         <DialogHeader>
           <DialogTitle>{title}</DialogTitle>

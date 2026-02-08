@@ -12,7 +12,7 @@ import { BackButton } from '@/components/back-button'
 import { cn } from '@/shared/utils'
 import { Markdown } from '@/components/markdown'
 import { EditDeckButton, DeleteDeckButton } from './deck-actions'
-import { EditCardButton, DeleteCardButton } from './card-actions'
+import { CardActionMenu } from './card-actions'
 
 interface Props {
   params: Promise<{ deckId: string }>
@@ -62,7 +62,7 @@ function CardListItem({
   deckId: string
 }) {
   return (
-    <div className="group flex items-start gap-4 rounded-xl border border-transparent bg-transparent px-4 py-3.5 transition-colors hover:border-border/50 hover:bg-card/50">
+    <div className="flex items-start gap-4 rounded-xl border border-transparent bg-transparent px-4 py-3.5 transition-colors hover:border-border/50 hover:bg-card/50">
       <div className="min-w-0 flex-1 text-[14px] font-medium leading-snug">
         <Markdown>{card.front}</Markdown>
       </div>
@@ -74,14 +74,13 @@ function CardListItem({
           {card.type === 'subjective' ? '주관식' : '기본'}
         </Badge>
         {card.progress && <ProgressBadge status={card.progress.status} />}
-        <EditCardButton
+        <CardActionMenu
           deckId={deckId}
           cardId={card.id}
           front={card.front}
           back={card.back}
           type={card.type}
         />
-        <DeleteCardButton deckId={deckId} cardId={card.id} />
       </div>
     </div>
   )

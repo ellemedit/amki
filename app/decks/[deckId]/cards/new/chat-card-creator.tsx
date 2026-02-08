@@ -553,7 +553,7 @@ export function ChatCardCreator({
       ? 'AI가 응답을 준비하는 중...'
       : status === 'streaming'
         ? 'AI가 응답하는 중... 메시지를 미리 입력할 수 있어요'
-        : '학습 자료를 붙여넣거나, 만들고 싶은 카드를 설명하세요...'
+        : '학습카드를 만들 수 있어요'
 
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' })
