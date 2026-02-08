@@ -1,4 +1,4 @@
-import { db } from "@/db";
+import { db, type Transactable } from "@/db";
 import { chatSessions } from "./schema";
 import { eq } from "drizzle-orm";
 
@@ -6,23 +6,24 @@ export async function upsertChatSession(
   id: string,
   deckId: string,
   messages: unknown[],
+  tx: Transactable = db,
 ) {
-  const [existing] = await db
+  const [existing] = await tx
     .select({ id: chatSessions.id })
     .from(chatSessions)
     .where(eq(chatSessions.id, id))
     .limit(1);
 
   if (existing) {
-    await db
+    await tx
       .update(chatSessions)
       .set({ messages })
       .where(eq(chatSessions.id, id));
   } else {
-    await db.insert(chatSessions).values({ id, deckId, messages });
+    await tx.insert(chatSessions).values({ id, deckId, messages });
   }
 }
 
-export async function deleteChatSession(id: string) {
-  await db.delete(chatSessions).where(eq(chatSessions.id, id));
+export async function deleteChatSession(id: string, tx: Transactable = db) {
+  await tx.delete(chatSessions).where(eq(chatSessions.id, id));
 }

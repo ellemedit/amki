@@ -1,19 +1,23 @@
-import { db } from "@/db";
-import { decks } from "./schema";
+import { db, type Transactable } from "@/db";
+import { decks, type WriteDeck } from "./schema";
 import { eq } from "drizzle-orm";
 
-export async function insertDeck(data: { name: string; description: string }) {
-  const [deck] = await db.insert(decks).values(data).returning();
+export async function insertDeck(
+  data: WriteDeck,
+  tx: Transactable = db,
+) {
+  const [deck] = await tx.insert(decks).values(data).returning();
   return deck;
 }
 
 export async function updateDeckById(
   id: string,
-  data: { name: string; description: string },
+  data: WriteDeck,
+  tx: Transactable = db,
 ) {
-  await db.update(decks).set(data).where(eq(decks.id, id));
+  await tx.update(decks).set(data).where(eq(decks.id, id));
 }
 
-export async function deleteDeckById(id: string) {
-  await db.delete(decks).where(eq(decks.id, id));
+export async function deleteDeckById(id: string, tx: Transactable = db) {
+  await tx.delete(decks).where(eq(decks.id, id));
 }

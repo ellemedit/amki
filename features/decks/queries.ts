@@ -1,18 +1,38 @@
 import { cache } from "react";
-import { cacheTag } from "next/cache";
-import { connection } from "next/server";
+import { cacheTag, revalidateTag, updateTag } from "next/cache";
 import { db } from "@/db";
 import { decks } from "./schema";
 import { cards } from "@/features/cards/schema";
 import { cardProgress } from "@/features/study/schema";
 import { eq, lte, and, count, desc } from "drizzle-orm";
 
+function getDeckCacheKey(deckId: string) {
+  return `deck-${deckId}` as const;
+}
+function getDecksCacheKey() {
+  return "decks" as const;
+}
+
+export function updateDeckCache(deckId: string) {
+  updateTag(getDeckCacheKey(deckId));
+}
+export function revalidateDeckCache(deckId: string) {
+  revalidateTag(getDeckCacheKey(deckId), "max");
+}
+
+export function updateDecksCache() {
+  updateTag(getDecksCacheKey());
+}
+export function revalidateDecksCache() {
+  revalidateTag(getDecksCacheKey(), "max");
+}
+
 /**
  * 덱 단건 조회 (request-scoped dedup + cross-request cache)
  */
 export const getDeck = cache(async (deckId: string) => {
   "use cache";
-  cacheTag(`deck-${deckId}`);
+  cacheTag(getDeckCacheKey(deckId));
 
   const [deck] = await db
     .select()
@@ -28,7 +48,7 @@ export const getDeck = cache(async (deckId: string) => {
  */
 export async function getDecksWithCardCounts() {
   "use cache";
-  cacheTag("decks");
+  cacheTag(getDecksCacheKey());
 
   const allDecks = await db.select().from(decks).orderBy(desc(decks.createdAt));
 
@@ -57,10 +77,11 @@ export async function getDecksWithCardCounts() {
 }
 
 /**
- * 덱별 복습 대기 카드 수 (시간 의존적 — 항상 동적 실행)
+ * 덱별 복습 대기 카드 수
  */
 export async function getDueCount(deckId: string) {
-  await connection();
+  "use cache";
+  cacheTag(getDeckCacheKey(deckId));
 
   const [dueCount] = await db
     .select({ count: count() })

@@ -1,23 +1,22 @@
-import { db } from "@/db";
-import { cards } from "./schema";
+import { db, type Transactable } from "@/db";
+import { cards, type WriteCard } from "./schema";
 import { eq } from "drizzle-orm";
 
-export async function insertCard(data: {
-  deckId: string;
-  front: string;
-  back: string;
-  type: string;
-}) {
-  await db.insert(cards).values(data);
+export async function insertCard(
+  data: WriteCard,
+  tx: Transactable = db,
+) {
+  await tx.insert(cards).values(data);
 }
 
 export async function insertCards(
-  rows: Array<{ deckId: string; front: string; back: string; type: string }>,
+  rows: WriteCard[],
+  tx: Transactable = db,
 ) {
   if (rows.length === 0) return;
-  await db.insert(cards).values(rows);
+  await tx.insert(cards).values(rows);
 }
 
-export async function deleteCardById(cardId: string) {
-  await db.delete(cards).where(eq(cards.id, cardId));
+export async function deleteCardById(cardId: string, tx: Transactable = db) {
+  await tx.delete(cards).where(eq(cards.id, cardId));
 }

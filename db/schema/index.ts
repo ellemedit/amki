@@ -1,24 +1,24 @@
-export { decks, type Deck, type NewDeck } from "@/features/decks/schema";
+export { decks, type ReadDeck, type WriteDeck } from "@/features/decks/schema";
 
 export {
   cards,
-  type Card,
-  type NewCard,
+  type ReadCard,
+  type WriteCard,
   type CardType,
 } from "@/features/cards/schema";
 
 export {
   cardProgress,
-  type CardProgress,
-  type NewCardProgress,
+  type ReadCardProgress,
+  type WriteCardProgress,
   type CardProgressStatus,
   reviewLogs,
-  type ReviewLog,
-  type NewReviewLog,
+  type ReadReviewLog,
+  type WriteReviewLog,
 } from "@/features/study/schema";
 
 export {
   chatSessions,
-  type ChatSession,
-  type NewChatSession,
+  type ReadChatSession,
+  type WriteChatSession,
 } from "@/features/chat/schema";

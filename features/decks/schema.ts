@@ -13,5 +13,5 @@ export const decks = pgTable("decks", {
     .$onUpdate(() => new Date()),
 });
 
-export type Deck = typeof decks.$inferSelect;
-export type NewDeck = typeof decks.$inferInsert;
+export type ReadDeck = typeof decks.$inferSelect;
+export type WriteDeck = typeof decks.$inferInsert;

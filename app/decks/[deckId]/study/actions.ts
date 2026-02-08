@@ -1,6 +1,5 @@
 "use server";
 
-import { updateTag } from "next/cache";
 import { generateText, Output } from "ai";
 import { anthropic } from "@ai-sdk/anthropic";
 import { z } from "zod";
@@ -9,6 +8,8 @@ import { cardProgress } from "@/features/study/schema";
 import { eq } from "drizzle-orm";
 import { calculateSM2, SM2_DEFAULTS } from "@/lib/sm2";
 import { upsertProgress, insertReviewLog } from "@/features/study/mutations";
+import { updateCardsCache } from "@/features/cards/queries";
+import { updateDecksCache } from "@/features/decks/queries";
 
 // ---------------------------------------------------------------------------
 // submitReview
@@ -21,29 +22,36 @@ export async function submitReview(
   userAnswer?: string,
   aiFeedback?: string,
 ) {
-  const [existing] = await db
-    .select()
-    .from(cardProgress)
-    .where(eq(cardProgress.cardId, cardId))
-    .limit(1);
+  const result = await db.transaction(async (tx) => {
+    const [existing] = await tx
+      .select()
+      .from(cardProgress)
+      .where(eq(cardProgress.cardId, cardId))
+      .limit(1);
 
-  const result = calculateSM2({
-    quality,
-    repetitions: existing?.repetitions ?? SM2_DEFAULTS.repetitions,
-    easinessFactor: existing?.easinessFactor ?? SM2_DEFAULTS.easinessFactor,
-    intervalDays: existing?.intervalDays ?? SM2_DEFAULTS.intervalDays,
+    const sm2Result = calculateSM2({
+      quality,
+      repetitions: existing?.repetitions ?? SM2_DEFAULTS.repetitions,
+      easinessFactor: existing?.easinessFactor ?? SM2_DEFAULTS.easinessFactor,
+      intervalDays: existing?.intervalDays ?? SM2_DEFAULTS.intervalDays,
+    });
+
+    await upsertProgress(cardId, sm2Result, tx);
+    await insertReviewLog(
+      {
+        cardId,
+        quality,
+        userAnswer: userAnswer ?? null,
+        aiFeedback: aiFeedback ?? null,
+      },
+      tx,
+    );
+
+    return sm2Result;
   });
 
-  await upsertProgress(cardId, result);
-  await insertReviewLog({
-    cardId,
-    quality,
-    userAnswer: userAnswer ?? null,
-    aiFeedback: aiFeedback ?? null,
-  });
-
-  updateTag(`cards-${deckId}`);
-  updateTag("decks");
+  updateCardsCache(deckId);
+  updateDecksCache();
 
   return result;
 }

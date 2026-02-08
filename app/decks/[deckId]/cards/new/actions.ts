@@ -1,8 +1,9 @@
 "use server";
 
 import { z } from "zod";
-import { updateTag } from "next/cache";
 import { insertCard } from "@/features/cards/mutations";
+import { updateCardsCache } from "@/features/cards/queries";
+import { updateDecksCache } from "@/features/decks/queries";
 
 const createCardSchema = z.object({
   front: z.string().trim().min(1, "앞면을 입력해주세요."),
@@ -23,6 +24,6 @@ export async function createCard(deckId: string, formData: FormData) {
 
   await insertCard({ deckId, ...result.data });
 
-  updateTag(`cards-${deckId}`);
-  updateTag("decks");
+  updateCardsCache(deckId);
+  updateDecksCache();
 }

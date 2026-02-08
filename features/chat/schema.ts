@@ -16,5 +16,5 @@ export const chatSessions = pgTable("chat_sessions", {
     .$onUpdate(() => new Date()),
 });
 
-export type ChatSession = typeof chatSessions.$inferSelect;
-export type NewChatSession = typeof chatSessions.$inferInsert;
+export type ReadChatSession = typeof chatSessions.$inferSelect;
+export type WriteChatSession = typeof chatSessions.$inferInsert;

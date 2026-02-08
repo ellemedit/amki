@@ -1,8 +1,12 @@
-import { db } from "@/db";
-import { cardProgress, reviewLogs } from "./schema";
+import { db, type Transactable } from "@/db";
+import { cardProgress, reviewLogs, type WriteReviewLog } from "./schema";
 import type { SM2Result } from "@/lib/sm2";
 
-export async function upsertProgress(cardId: string, result: SM2Result) {
+export async function upsertProgress(
+  cardId: string,
+  result: SM2Result,
+  tx: Transactable = db,
+) {
   const fields = {
     repetitions: result.repetitions,
     easinessFactor: result.easinessFactor,
@@ -11,7 +15,7 @@ export async function upsertProgress(cardId: string, result: SM2Result) {
     status: result.status,
   };
 
-  await db
+  await tx
     .insert(cardProgress)
     .values({ cardId, ...fields })
     .onConflictDoUpdate({
@@ -20,11 +24,9 @@ export async function upsertProgress(cardId: string, result: SM2Result) {
     });
 }
 
-export async function insertReviewLog(data: {
-  cardId: string;
-  quality: number;
-  userAnswer: string | null;
-  aiFeedback: string | null;
-}) {
-  await db.insert(reviewLogs).values(data);
+export async function insertReviewLog(
+  data: WriteReviewLog,
+  tx: Transactable = db,
+) {
+  await tx.insert(reviewLogs).values(data);
 }

@@ -1,16 +1,27 @@
 import { cache } from "react";
-import { cacheTag } from "next/cache";
+import { cacheTag, revalidateTag, updateTag } from "next/cache";
 import { db } from "@/db";
 import { cards } from "./schema";
 import { cardProgress } from "@/features/study/schema";
 import { eq } from "drizzle-orm";
+
+function getCardsCacheKey(deckId: string) {
+  return `cards-${deckId}` as const;
+}
+
+export function updateCardsCache(deckId: string) {
+  updateTag(getCardsCacheKey(deckId));
+}
+export function revalidateCardsCache(deckId: string) {
+  revalidateTag(getCardsCacheKey(deckId), "max");
+}
 
 /**
  * 카드 + 학습 진행도 목록 (request-scoped dedup + cross-request cache)
  */
 export const getCardsWithProgress = cache(async (deckId: string) => {
   "use cache";
-  cacheTag(`cards-${deckId}`);
+  cacheTag(getCardsCacheKey(deckId));
 
   const deckCards = await db
     .select()

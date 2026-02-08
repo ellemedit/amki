@@ -1,8 +1,9 @@
 import { convertToModelMessages, streamText, UIMessage, stepCountIs } from "ai";
 import { anthropic } from "@ai-sdk/anthropic";
 import { z } from "zod";
-import { revalidateTag } from "next/cache";
 import { insertCard } from "@/features/cards/mutations";
+import { revalidateCardsCache } from "@/features/cards/queries";
+import { revalidateDecksCache } from "@/features/decks/queries";
 import { upsertChatSession } from "@/features/chat/mutations";
 
 export const maxDuration = 60;
@@ -60,8 +61,8 @@ export async function POST(req: Request) {
           type: "basic" | "subjective";
         }) => {
           await insertCard({ deckId, front, back, type });
-          revalidateTag(`cards-${deckId}`, "max");
-          revalidateTag("decks", "max");
+          revalidateCardsCache(deckId);
+          revalidateDecksCache();
           return { success: true, front, back, type };
         },
       },

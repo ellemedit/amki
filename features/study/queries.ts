@@ -2,6 +2,7 @@ import { db } from "@/db";
 import { cards } from "@/features/cards/schema";
 import { cardProgress } from "./schema";
 import { eq, lte, and, inArray } from "drizzle-orm";
+import { cacheTag, revalidateTag, updateTag } from "next/cache";
 
 export interface StudyCard {
   id: string;
@@ -16,10 +17,24 @@ export interface StudyCard {
   } | null;
 }
 
+function getStudyCardsCacheKey(deckId: string) {
+  return `study-cards-${deckId}` as const;
+}
+
+export function updateStudyCardsCache(deckId: string) {
+  updateTag(getStudyCardsCacheKey(deckId));
+}
+export function revalidateStudyCardsCache(deckId: string) {
+  revalidateTag(getStudyCardsCacheKey(deckId), "max");
+}
+
 /**
- * 학습 대상 카드 조회 (항상 동적 — 캐시하지 않음)
+ * 학습 대상 카드 조회
  */
 export async function getStudyCards(deckId: string): Promise<StudyCard[]> {
+  "use cache";
+  cacheTag(getStudyCardsCacheKey(deckId));
+
   const now = new Date();
 
   // Cards with progress that are due

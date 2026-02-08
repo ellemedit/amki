@@ -21,5 +21,5 @@ export const cards = pgTable("cards", {
     .$onUpdate(() => new Date()),
 });
 
-export type Card = typeof cards.$inferSelect;
-export type NewCard = typeof cards.$inferInsert;
+export type ReadCard = typeof cards.$inferSelect;
+export type WriteCard = typeof cards.$inferInsert;

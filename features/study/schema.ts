@@ -33,8 +33,8 @@ export const cardProgress = pgTable("card_progress", {
     .$onUpdate(() => new Date()),
 });
 
-export type CardProgress = typeof cardProgress.$inferSelect;
-export type NewCardProgress = typeof cardProgress.$inferInsert;
+export type ReadCardProgress = typeof cardProgress.$inferSelect;
+export type WriteCardProgress = typeof cardProgress.$inferInsert;
 
 // --- Review Logs ---
 
@@ -51,5 +51,5 @@ export const reviewLogs = pgTable("review_logs", {
     .defaultNow(),
 });
 
-export type ReviewLog = typeof reviewLogs.$inferSelect;
-export type NewReviewLog = typeof reviewLogs.$inferInsert;
+export type ReadReviewLog = typeof reviewLogs.$inferSelect;
+export type WriteReviewLog = typeof reviewLogs.$inferInsert;
