@@ -8,6 +8,7 @@ import {
 } from "@/features/cards/mutations";
 import { updateCardsCache } from "@/features/cards/queries";
 import { updateDecksCache } from "@/features/decks/queries";
+import { refresh } from "next/cache";
 
 const addCardSchema = z.array(
   z.object({
@@ -27,8 +28,7 @@ export async function addCards(
   }
 
   await insertCards(result.data.map((c) => ({ deckId, ...c })));
-  updateCardsCache(deckId);
-  updateDecksCache();
+  refresh();
   return { count: result.data.length };
 }
 

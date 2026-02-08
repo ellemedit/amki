@@ -16,6 +16,7 @@ import {
   HAIKU_MODEL,
   CHAT_CARD_ASSISTANT_PROMPT,
 } from "@/features/cards/ai-config";
+import { revalidatePath } from "next/cache";
 
 export const maxDuration = 60;
 
@@ -93,6 +94,7 @@ export async function POST(req: Request) {
     generateMessageId: createIdGenerator({ prefix: "msg", size: 16 }),
     onFinish: async ({ messages: finalMessages }) => {
       await upsertChatSession(chatId, deckId, finalMessages);
+      revalidatePath("/");
     },
     onError: (error) => {
       if (error instanceof Error) return error.message;

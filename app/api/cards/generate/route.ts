@@ -1,4 +1,4 @@
-import { generateObject } from "ai";
+import { generateText, Output } from "ai";
 import { z } from "zod";
 import {
   HAIKU_MODEL,
@@ -45,13 +45,13 @@ function splitTextChunks(text: string, maxChars: number): string[] {
 }
 
 async function generateCardsFromContent(content: ContentPart[]) {
-  const result = await generateObject({
+  const result = await generateText({
     model: HAIKU_MODEL,
-    schema: cardSchema,
+    output: Output.object({ schema: cardSchema }),
     system: CARD_GENERATION_PROMPT,
     messages: [{ role: "user", content }],
   });
-  return result.object.cards;
+  return result.output!.cards;
 }
 
 export async function POST(req: Request) {
