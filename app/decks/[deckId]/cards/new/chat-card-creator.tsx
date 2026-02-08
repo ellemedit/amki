@@ -93,7 +93,34 @@ function UserMessagePart({ part }: { part: UIMessage['parts'][number] }) {
   return null
 }
 
-function CardAddResult({
+interface GeneratedCard {
+  front: string
+  back: string
+  type: string
+}
+
+function CardItem({ card }: { card: GeneratedCard }) {
+  return (
+    <div className="rounded-lg border border-border/30 bg-background/50 px-3.5 py-3">
+      <div className="mb-1.5 flex items-center gap-1.5">
+        <Badge
+          variant="outline"
+          className="h-[18px] border-border/40 px-1.5 text-[10px] text-muted-foreground"
+        >
+          {card.type === 'subjective' ? '주관식' : '기본'}
+        </Badge>
+      </div>
+      <div className="text-[13px] font-medium leading-snug">
+        <Markdown>{card.front}</Markdown>
+      </div>
+      <div className="mt-1.5 text-xs leading-relaxed text-muted-foreground">
+        <Markdown>{card.back}</Markdown>
+      </div>
+    </div>
+  )
+}
+
+function GenerateCardsResult({
   part,
 }: {
   part: { state: string; input?: unknown; output?: unknown }
@@ -102,7 +129,7 @@ function CardAddResult({
     return (
       <div className="flex items-center gap-2.5 rounded-xl border border-dashed border-border/60 px-4 py-3 text-xs text-muted-foreground">
         <Loader2 className="h-3.5 w-3.5 animate-spin" />
-        카드 추가 중...
+        카드 생성 중...
       </div>
     )
   }
@@ -110,40 +137,32 @@ function CardAddResult({
   if (part.state === 'output-error') {
     return (
       <div className="rounded-xl border border-destructive/15 bg-destructive/5 px-4 py-3 text-xs text-destructive">
-        카드 추가 중 오류가 발생했습니다
+        카드 생성 중 오류가 발생했습니다
       </div>
     )
   }
 
   if (part.state !== 'output-available' || !part.output) return null
 
-  const { front, back, type } = part.output as {
-    front: string
-    back: string
-    type: string
+  const { cards, count } = part.output as {
+    cards: GeneratedCard[]
+    count: number
   }
 
   return (
     <div className="rounded-xl border border-emerald-500/15 bg-emerald-500/3 px-4 py-3.5">
-      <div className="mb-2.5 flex items-center gap-2">
+      <div className="mb-3 flex items-center gap-2">
         <div className="flex h-4.5 w-4.5 items-center justify-center rounded-full bg-emerald-500/15">
           <Check className="h-3 w-3 text-emerald-400" />
         </div>
         <span className="text-xs font-medium text-emerald-400">
-          카드 추가됨
+          {count}장의 카드 추가됨
         </span>
-        <Badge
-          variant="outline"
-          className="h-[18px] border-border/40 px-1.5 text-[10px] text-muted-foreground"
-        >
-          {type === 'subjective' ? '주관식' : '기본'}
-        </Badge>
       </div>
-      <div className="text-[13px] font-medium leading-snug">
-        <Markdown>{front}</Markdown>
-      </div>
-      <div className="mt-2 text-xs leading-relaxed text-muted-foreground">
-        <Markdown>{back}</Markdown>
+      <div className="space-y-2">
+        {cards.map((card, i) => (
+          <CardItem key={i} card={card} />
+        ))}
       </div>
     </div>
   )
@@ -167,7 +186,7 @@ function UserMessage({ message }: { message: UIMessage }) {
 
 function AssistantMessage({ message }: { message: UIMessage }) {
   const textParts = message.parts.filter((p) => p.type === 'text')
-  const toolParts = message.parts.filter((p) => p.type === 'tool-cardAdd')
+  const toolParts = message.parts.filter((p) => p.type === 'tool-generateCards')
 
   return (
     <div className="flex items-start gap-3">
@@ -185,7 +204,7 @@ function AssistantMessage({ message }: { message: UIMessage }) {
         {toolParts.length > 0 && (
           <div className="space-y-2">
             {toolParts.map((part, i) => (
-              <CardAddResult key={i} part={part as never} />
+              <GenerateCardsResult key={i} part={part as never} />
             ))}
           </div>
         )}
@@ -332,10 +351,14 @@ export function ChatCardCreator({
     .flatMap((m) => m.parts)
     .filter(
       (p) =>
-        p.type === 'tool-cardAdd' &&
+        p.type === 'tool-generateCards' &&
         'state' in p &&
         p.state === 'output-available',
-    ).length
+    )
+    .reduce((sum, p) => {
+      const output = (p as { output?: { count?: number } }).output
+      return sum + (output?.count ?? 0)
+    }, 0)
 
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' })
