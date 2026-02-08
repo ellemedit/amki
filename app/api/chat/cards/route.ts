@@ -9,9 +9,6 @@ import {
 } from "ai";
 import { anthropic } from "@ai-sdk/anthropic";
 import { z } from "zod";
-import { insertCards } from "@/features/cards/mutations";
-import { revalidateCardsCache } from "@/features/cards/queries";
-import { revalidateDecksCache } from "@/features/decks/queries";
 import { upsertChatSession } from "@/features/chat/mutations";
 import { getChatSession } from "@/features/chat/queries";
 import { parseUIMessages } from "@/features/chat/utils";
@@ -46,13 +43,7 @@ function createTools(deckId: string) {
         ),
       }),
       execute: async ({ cards }) => {
-        if (cards.length > 0) {
-          await insertCards(cards.map((c) => ({ deckId, ...c })));
-          revalidateCardsCache(deckId);
-          revalidateDecksCache();
-        }
-
-        return { success: true, count: cards.length, cards };
+        return { count: cards.length, cards };
       },
     }),
   };
