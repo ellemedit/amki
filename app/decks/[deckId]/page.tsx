@@ -114,24 +114,22 @@ function CardListItem({
 // Page shell
 // ---------------------------------------------------------------------------
 
-export default async function DeckDetailPage({ params }: Props) {
-  const { deckId } = await params
-
+export default function DeckDetailPage({ params }: Props) {
   return (
     <div className="min-h-screen bg-background">
       <Suspense fallback={<HeaderSkeleton />}>
-        <DeckHeader deckId={deckId} />
+        <DeckHeader params={params} />
       </Suspense>
 
       <main className="mx-auto max-w-3xl px-5 py-8">
         <Suspense fallback={<StatsSkeleton />}>
-          <DeckStatsAndActions deckId={deckId} />
+          <DeckStatsAndActions params={params} />
         </Suspense>
 
         <Separator className="mb-8 opacity-50" />
 
         <Suspense fallback={<CardListSkeleton />}>
-          <DeckCardList deckId={deckId} />
+          <DeckCardList params={params} />
         </Suspense>
       </main>
     </div>
@@ -142,7 +140,8 @@ export default async function DeckDetailPage({ params }: Props) {
 // 1) Header
 // ---------------------------------------------------------------------------
 
-async function DeckHeader({ deckId }: { deckId: string }) {
+async function DeckHeader({ params }: { params: Promise<{ deckId: string }> }) {
+  const { deckId } = await params
   const deck = await getDeck(deckId)
   if (!deck) notFound()
 
@@ -185,7 +184,12 @@ async function DeckHeader({ deckId }: { deckId: string }) {
 // 2) Stats + Actions
 // ---------------------------------------------------------------------------
 
-async function DeckStatsAndActions({ deckId }: { deckId: string }) {
+async function DeckStatsAndActions({
+  params,
+}: {
+  params: Promise<{ deckId: string }>
+}) {
+  const { deckId } = await params
   const cardsWithProgress = await getCardsWithProgress(deckId)
 
   const now = new Date()
@@ -250,7 +254,12 @@ async function DeckStatsAndActions({ deckId }: { deckId: string }) {
 // 3) Card list
 // ---------------------------------------------------------------------------
 
-async function DeckCardList({ deckId }: { deckId: string }) {
+async function DeckCardList({
+  params,
+}: {
+  params: Promise<{ deckId: string }>
+}) {
+  const { deckId } = await params
   const cardsWithProgress = await getCardsWithProgress(deckId)
 
   if (cardsWithProgress.length === 0) {
