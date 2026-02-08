@@ -19,9 +19,7 @@ export default function HomePage() {
             </div>
             <div>
               <h1 className="text-lg font-semibold tracking-tight">Amki</h1>
-              <p className="text-xs text-muted-foreground">
-                스마트 간격 반복 학습
-              </p>
+              <p className="text-xs text-muted-foreground">간격 반복 학습</p>
             </div>
           </div>
           <Link href="/decks/new">
