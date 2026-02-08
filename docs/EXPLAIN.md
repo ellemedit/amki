@@ -89,7 +89,6 @@ flowchart TD
 ![주관식 플래시카드를 채점하기 위해 제출하는 화면](./3.png)
 ![LLM이 주관식 채점해주는 화면](./4.png)
 
-![](./mobile-1.png){height=420}
-![](./mobile-2.png){height=420}
-![](./mobile-3.png){height=420}
-![](./mobile-4.png){height=420}
+<img width="397" height="861" alt="Image" src="https://github.com/user-attachments/assets/d1a77a5e-4cc7-4307-9a18-712b949042ba" />
+<img width="398" height="581" alt="Image" src="https://github.com/user-attachments/assets/8620d494-5c06-48d5-aadf-29a3ac612569" />
+<img width="398" height="803" alt="Image" src="https://github.com/user-attachments/assets/5af3ea9c-a457-46f8-8eb0-4ad475f76a0d" />
