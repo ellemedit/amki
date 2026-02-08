@@ -18,11 +18,6 @@ export default function StudyPage({ params }: Props) {
   )
 }
 
-// ADR: connection()으로 동적 렌더링 강제.
-// 학습 카드는 nextReviewDate 기준으로 필터링되므로 항상 최신 시간을 기준으로
-// 쿼리해야 합니다. "use cache"로 캐싱된 getStudyCards가 connection() 이후
-// 호출되어 캐시 키에 현재 시간이 반영됩니다.
-
 async function StudyContent({
   params,
 }: {

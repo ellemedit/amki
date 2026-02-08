@@ -21,10 +21,6 @@ import { updateDeck, deleteDeck } from './actions'
 import { FormButtons } from '@/components/form-buttons'
 import { ConfirmDialog } from '@/components/confirm-dialog'
 
-// ---------------------------------------------------------------------------
-// Edit Deck Dialog
-// ---------------------------------------------------------------------------
-
 export function EditDeckButton({
   deckId,
   name,
@@ -94,10 +90,6 @@ export function EditDeckButton({
     </Dialog>
   )
 }
-
-// ---------------------------------------------------------------------------
-// Delete Deck Dialog
-// ---------------------------------------------------------------------------
 
 export function DeleteDeckButton({ deckId }: { deckId: string }) {
   const router = useRouter()

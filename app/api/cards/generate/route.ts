@@ -14,10 +14,6 @@ interface FilePayload {
   url: string; // data URL
 }
 
-// ---------------------------------------------------------------------------
-// Helpers
-// ---------------------------------------------------------------------------
-
 type ContentPart =
   | { type: "text"; text: string }
   | { type: "image"; image: string }
@@ -58,10 +54,6 @@ async function generateCardsFromContent(content: ContentPart[]) {
   return result.object.cards;
 }
 
-// ---------------------------------------------------------------------------
-// Route
-// ---------------------------------------------------------------------------
-
 export async function POST(req: Request) {
   const { files, text } = (await req.json()) as {
     files: FilePayload[];
@@ -75,7 +67,6 @@ export async function POST(req: Request) {
     );
   }
 
-  // 텍스트 콘텐츠와 바이너리(이미지/PDF) 콘텐츠를 분리
   const textParts: string[] = [];
   const binaryParts: ContentPart[] = [];
 
@@ -95,7 +86,6 @@ export async function POST(req: Request) {
       const decoded = Buffer.from(base64Data, "base64").toString("utf-8");
       textParts.push(`--- 파일: ${file.name} ---\n${decoded}\n--- 끝 ---`);
     } else {
-      // PDF 등 바이너리 파일
       binaryParts.push({ type: "file", data: file.url, mediaType });
     }
   }
@@ -105,7 +95,6 @@ export async function POST(req: Request) {
     const tasks: Promise<z.infer<typeof cardSchema>["cards"]>[] = [];
 
     if (binaryParts.length > 0) {
-      // 바이너리(이미지/PDF) — 모든 바이너리를 한 번에 처리
       const content: ContentPart[] = [
         {
           type: "text",
@@ -117,7 +106,6 @@ export async function POST(req: Request) {
       ];
       tasks.push(generateCardsFromContent(content));
     } else if (allText.length > CHUNK_CHAR_THRESHOLD) {
-      // 큰 텍스트 — 청크로 분할하여 병렬 처리
       const chunks = splitTextChunks(allText, CHUNK_CHAR_THRESHOLD);
       for (const chunk of chunks) {
         tasks.push(
@@ -125,7 +113,6 @@ export async function POST(req: Request) {
         );
       }
     } else {
-      // 작은 텍스트 — 단일 호출
       tasks.push(
         generateCardsFromContent([
           {

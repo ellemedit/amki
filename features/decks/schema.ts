@@ -1,10 +1,3 @@
-/**
- * 덱(Deck) 테이블 스키마.
- *
- * 덱은 카드를 그룹으로 묶는 최상위 엔티티입니다.
- * cards 테이블이 deckId FK로 참조하며, cascade delete가 적용됩니다.
- */
-
 import { pgTable, text, timestamp, uuid } from "drizzle-orm/pg-core";
 
 export const decks = pgTable("decks", {

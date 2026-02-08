@@ -1,10 +1,5 @@
 /**
- * 학습 진행도(Study) 테이블 스키마.
- *
- * SM-2 간격 반복 알고리즘의 상태를 저장합니다:
- * - cardProgress: 카드별 SM-2 파라미터 (repetitions, easinessFactor, intervalDays)
- * - reviewLogs: 학습 이력 (quality, userAnswer, aiFeedback)
- *
+ * SM-2 간격 반복 알고리즘 상태 저장.
  * cardProgress.status 상태 전이: new → learning → review
  */
 
@@ -18,8 +13,6 @@ import {
   varchar,
 } from "drizzle-orm/pg-core";
 import { cards } from "@/features/cards/schema";
-
-// --- Card Progress ---
 
 export const cardProgressStatusEnum = ["new", "learning", "review"] as const;
 export type CardProgressStatus = (typeof cardProgressStatusEnum)[number];
@@ -45,8 +38,6 @@ export const cardProgress = pgTable("card_progress", {
 
 export type ReadCardProgress = typeof cardProgress.$inferSelect;
 export type WriteCardProgress = typeof cardProgress.$inferInsert;
-
-// --- Review Logs ---
 
 export const reviewLogs = pgTable("review_logs", {
   id: uuid("id").primaryKey().defaultRandom(),

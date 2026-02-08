@@ -22,10 +22,6 @@ import {
 
 export const maxDuration = 60;
 
-// ---------------------------------------------------------------------------
-// Tools
-// ---------------------------------------------------------------------------
-
 function createTools(deckId: string) {
   return {
     generateCards: tool({
@@ -52,7 +48,6 @@ function createTools(deckId: string) {
       execute: async ({ cards }) => {
         if (cards.length > 0) {
           await insertCards(cards.map((c) => ({ deckId, ...c })));
-          // Route Handler 컨텍스트이므로 revalidateTag 사용
           revalidateCardsCache(deckId);
           revalidateDecksCache();
         }

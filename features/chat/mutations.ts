@@ -1,4 +1,4 @@
-import { db, type Transactable } from "@/db";
+import { db, type Transactable } from "@/drizzle/db";
 import { chatSessions } from "./schema";
 import { eq } from "drizzle-orm";
 

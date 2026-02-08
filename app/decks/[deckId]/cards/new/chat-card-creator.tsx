@@ -28,19 +28,11 @@ import { DragOverlay } from '@/components/drag-overlay'
 import { FileChip } from '@/components/file-chip'
 import type { FileAttachment } from '@/shared/file'
 
-// ---------------------------------------------------------------------------
-// Types
-// ---------------------------------------------------------------------------
-
 interface ChatCardCreatorProps {
   deckId: string
   initialMessages?: UIMessage[]
   chatId: string
 }
-
-// ---------------------------------------------------------------------------
-// Sub-components (leaf-level, no deep nesting)
-// ---------------------------------------------------------------------------
 
 function AiAvatar() {
   return (
@@ -159,10 +151,6 @@ function GenerateCardsResult({
   )
 }
 
-// ---------------------------------------------------------------------------
-// Message rows
-// ---------------------------------------------------------------------------
-
 function UserMessage({ message }: { message: UIMessage }) {
   return (
     <div className="flex justify-end">
@@ -208,10 +196,6 @@ function MessageRow({ message }: { message: UIMessage }) {
   if (message.role === 'user') return <UserMessage message={message} />
   return <AssistantMessage message={message} />
 }
-
-// ---------------------------------------------------------------------------
-// Empty state
-// ---------------------------------------------------------------------------
 
 const suggestions = [
   {
@@ -265,10 +249,6 @@ function EmptyState({
     </div>
   )
 }
-
-// ---------------------------------------------------------------------------
-// Main component
-// ---------------------------------------------------------------------------
 
 export function ChatCardCreator({
   deckId,
@@ -359,7 +339,6 @@ export function ChatCardCreator({
 
   return (
     <div className="flex h-[calc(100vh-73px)] flex-col">
-      {/* Messages */}
       <div className="flex-1 overflow-y-auto" {...dropHandlers}>
         <div className="mx-auto max-w-[640px] space-y-8 px-5 py-8">
           {messages.length === 0 && (
@@ -391,7 +370,6 @@ export function ChatCardCreator({
         {isDragging && <DragOverlay icon={Paperclip} />}
       </div>
 
-      {/* Footer */}
       <div className="border-t border-border/50 bg-background">
         {addedCount > 0 && (
           <div className="border-b border-border/50 px-5 py-2">

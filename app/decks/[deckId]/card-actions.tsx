@@ -19,10 +19,6 @@ import { updateCard, deleteCard } from './card-actions-server'
 import { FormButtons } from '@/components/form-buttons'
 import { ConfirmDialog } from '@/components/confirm-dialog'
 
-// ---------------------------------------------------------------------------
-// Edit Card Dialog
-// ---------------------------------------------------------------------------
-
 export function EditCardButton({
   deckId,
   cardId,
@@ -101,10 +97,6 @@ export function EditCardButton({
     </Dialog>
   )
 }
-
-// ---------------------------------------------------------------------------
-// Delete Card Dialog
-// ---------------------------------------------------------------------------
 
 export function DeleteCardButton({
   deckId,

@@ -3,17 +3,13 @@
 import { generateText, Output } from "ai";
 import { anthropic } from "@ai-sdk/anthropic";
 import { z } from "zod";
-import { db } from "@/db";
+import { db } from "@/drizzle/db";
 import { cardProgress } from "@/features/study/schema";
 import { eq } from "drizzle-orm";
 import { calculateSM2, SM2_DEFAULTS } from "@/shared/sm2";
 import { upsertProgress, insertReviewLog } from "@/features/study/mutations";
 import { updateCardsCache } from "@/features/cards/queries";
 import { updateDecksCache } from "@/features/decks/queries";
-
-// ---------------------------------------------------------------------------
-// submitReview
-// ---------------------------------------------------------------------------
 
 const submitReviewSchema = z.object({
   cardId: z.string().min(1),
@@ -74,10 +70,6 @@ export async function submitReview(
 
   return result;
 }
-
-// ---------------------------------------------------------------------------
-// gradeSubjectiveAnswer
-// ---------------------------------------------------------------------------
 
 const gradingSchema = z.object({
   quality: z

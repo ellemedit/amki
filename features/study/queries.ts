@@ -1,11 +1,9 @@
 /**
- * 학습 카드 쿼리 및 캐싱.
- *
  * 복습 예정(due) 카드와 미학습(new) 카드를 합산하여 셔플된 학습 세트를 반환합니다.
  * 캐싱 전략은 cards/queries, decks/queries와 동일합니다.
  */
 
-import { db } from "@/db";
+import { db } from "@/drizzle/db";
 import { cards } from "@/features/cards/schema";
 import { cardProgress } from "./schema";
 import { eq, lte, and, inArray } from "drizzle-orm";
@@ -28,26 +26,20 @@ function getStudyCardsCacheKey(deckId: string) {
   return `study-cards-${deckId}` as const;
 }
 
-/** Server Action / Server Component에서 사용. 동기적으로 학습 카드 캐시를 무효화합니다. */
 export function updateStudyCardsCache(deckId: string) {
   updateTag(getStudyCardsCacheKey(deckId));
 }
 
-/** Route Handler에서 사용. 비동기적으로 학습 카드 캐시를 재검증합니다. */
 export function revalidateStudyCardsCache(deckId: string) {
   revalidateTag(getStudyCardsCacheKey(deckId), "max");
 }
 
-/**
- * 학습 대상 카드 조회
- */
 export async function getStudyCards(deckId: string): Promise<StudyCard[]> {
   "use cache";
   cacheTag(getStudyCardsCacheKey(deckId));
 
   const now = new Date();
 
-  // Cards with progress that are due
   const dueCards = await db
     .select({
       id: cards.id,
@@ -65,7 +57,6 @@ export async function getStudyCards(deckId: string): Promise<StudyCard[]> {
       and(eq(cards.deckId, deckId), lte(cardProgress.nextReviewDate, now)),
     );
 
-  // New cards (no progress record)
   const allCards = await db
     .select({ id: cards.id })
     .from(cards)

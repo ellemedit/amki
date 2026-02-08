@@ -1,7 +1,7 @@
 "use server";
 
 import { z } from "zod";
-import { db } from "@/db";
+import { db } from "@/drizzle/db";
 import { insertDeck } from "@/features/decks/mutations";
 import { insertCards } from "@/features/cards/mutations";
 import { updateDecksCache } from "@/features/decks/queries";

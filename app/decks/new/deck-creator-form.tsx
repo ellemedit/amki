@@ -25,10 +25,6 @@ import { DragOverlay } from '@/components/drag-overlay'
 import { FileChip } from '@/components/file-chip'
 import type { FileAttachment } from '@/shared/file'
 
-// ---------------------------------------------------------------------------
-// Types
-// ---------------------------------------------------------------------------
-
 interface CardDraft {
   id: string
   front: string
@@ -36,10 +32,6 @@ interface CardDraft {
   type: 'basic' | 'subjective'
   selected: boolean
 }
-
-// ---------------------------------------------------------------------------
-// Reducer
-// ---------------------------------------------------------------------------
 
 interface FormState {
   name: string
@@ -129,17 +121,9 @@ function formReducer(state: FormState, action: FormAction): FormState {
   }
 }
 
-// ---------------------------------------------------------------------------
-// Utilities
-// ---------------------------------------------------------------------------
-
 function generateId() {
   return Math.random().toString(36).slice(2, 10)
 }
-
-// ---------------------------------------------------------------------------
-// Sub-components
-// ---------------------------------------------------------------------------
 
 function CardItem({
   card,
@@ -230,10 +214,6 @@ function CardItem({
   )
 }
 
-// ---------------------------------------------------------------------------
-// Main component
-// ---------------------------------------------------------------------------
-
 export function DeckCreatorForm() {
   const router = useRouter()
   const [state, dispatch] = useReducer(formReducer, initialState)
@@ -242,8 +222,6 @@ export function DeckCreatorForm() {
   const { name, description, cards, uploadedFiles, isGenerating, error } = state
   const selectedCount = cards.filter((c) => c.selected).length
   const allSelected = cards.length > 0 && cards.every((c) => c.selected)
-
-  // ---- File handling (via useFileDrop hook) ----
 
   const handleFiles = useCallback(async (files: FileAttachment[]) => {
     dispatch({ type: 'GENERATE_START' })
@@ -290,8 +268,6 @@ export function DeckCreatorForm() {
     onFiles: handleFiles,
   })
 
-  // ---- Submit ----
-
   function handleSubmit() {
     if (!name.trim()) {
       dispatch({ type: 'SET_ERROR', value: '덱 이름을 입력해주세요.' })
@@ -318,8 +294,6 @@ export function DeckCreatorForm() {
     })
   }
 
-  // ---- Render ----
-
   return (
     <div className="min-h-screen bg-background" {...dropHandlers}>
       <header className="border-b border-border/50">
@@ -335,7 +309,6 @@ export function DeckCreatorForm() {
 
       <main className="mx-auto max-w-[560px] px-5 py-10">
         <div className="space-y-8">
-          {/* ── Deck info ── */}
           <div className="space-y-4">
             <div className="space-y-2">
               <Label htmlFor="name" className="text-[13px]">
@@ -370,7 +343,6 @@ export function DeckCreatorForm() {
             </div>
           </div>
 
-          {/* ── File upload zone ── */}
           <div className="space-y-3">
             <Label className="text-[13px]">파일로 카드 생성 (선택)</Label>
 
@@ -425,14 +397,12 @@ export function DeckCreatorForm() {
             )}
           </div>
 
-          {/* ── Error ── */}
           {error && (
             <div className="rounded-lg border border-destructive/20 bg-destructive/5 px-4 py-3 text-sm text-destructive">
               {error}
             </div>
           )}
 
-          {/* ── Generated cards ── */}
           {cards.length > 0 && (
             <div className="space-y-4">
               <div className="flex items-center justify-between">
@@ -493,7 +463,6 @@ export function DeckCreatorForm() {
             </div>
           )}
 
-          {/* ── Submit ── */}
           <div className="flex gap-2 pt-2">
             <Button
               onClick={handleSubmit}
@@ -519,7 +488,6 @@ export function DeckCreatorForm() {
         </div>
       </main>
 
-      {/* ── Full-page drag overlay ── */}
       {isDragging && <DragOverlay icon={Upload} />}
     </div>
   )

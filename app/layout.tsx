@@ -24,9 +24,6 @@ export default function RootLayout({
   children: React.ReactNode
 }>) {
   return (
-    // ADR: 다크 모드 고정 — 학습 앱 특성상 야간 사용 빈도가 높아
-    // 다크 모드를 기본으로 고정합니다. 추후 테마 전환이 필요하면
-    // next-themes ThemeProvider를 추가하세요.
     <html lang="ko" className="dark">
       <body
         className={`${geistSans.variable} ${geistMono.variable} font-sans antialiased`}

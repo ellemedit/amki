@@ -1,4 +1,4 @@
-import { db, type Transactable } from "@/db";
+import { db, type Transactable } from "@/drizzle/db";
 import { cardProgress, reviewLogs, type WriteReviewLog } from "./schema";
 import type { SM2Result } from "@/shared/sm2";
 

@@ -21,10 +21,6 @@ import type { ReadDeck } from '@/features/decks/schema'
 import { Markdown } from '@/components/markdown'
 import { cn } from '@/shared/utils'
 
-// ---------------------------------------------------------------------------
-// Types & Reducer
-// ---------------------------------------------------------------------------
-
 interface Props {
   deck: ReadDeck
   initialCards: StudyCard[]
@@ -70,10 +66,6 @@ function reducer(state: State, action: Action): State {
   }
 }
 
-// ---------------------------------------------------------------------------
-// Lookup: quality button styles
-// ---------------------------------------------------------------------------
-
 const qualityStyles: Record<number, string> = {
   0: 'border-red-500/20 bg-red-500/5 text-red-400 hover:bg-red-500/10',
   1: 'border-red-500/20 bg-red-500/5 text-red-400 hover:bg-red-500/10',
@@ -82,10 +74,6 @@ const qualityStyles: Record<number, string> = {
   4: 'border-emerald-500/25 bg-emerald-500/10 text-emerald-400 hover:bg-emerald-500/15',
   5: 'border-emerald-500/25 bg-emerald-500/10 text-emerald-400 hover:bg-emerald-500/15',
 }
-
-// ---------------------------------------------------------------------------
-// Sub-components
-// ---------------------------------------------------------------------------
 
 function AIFeedbackDisplay({
   feedback,
@@ -141,10 +129,6 @@ function QualityRatingGrid({
     </div>
   )
 }
-
-// ---------------------------------------------------------------------------
-// Main
-// ---------------------------------------------------------------------------
 
 export function StudySession({ deck, initialCards }: Props) {
   const router = useRouter()

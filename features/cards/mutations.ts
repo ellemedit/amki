@@ -1,11 +1,4 @@
-/**
- * 카드 뮤테이션 (CRUD 쓰기 연산).
- *
- * 캐시 무효화는 이 모듈에서 수행하지 않습니다.
- * 호출자(Server Action 또는 Route Handler)가 적절한 캐시 무효화 함수를 호출해야 합니다.
- */
-
-import { db, type Transactable } from "@/db";
+import { db, type Transactable } from "@/drizzle/db";
 import { cards, type WriteCard } from "./schema";
 import { eq } from "drizzle-orm";
 

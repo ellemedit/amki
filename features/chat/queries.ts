@@ -1,4 +1,4 @@
-import { db } from "@/db";
+import { db } from "@/drizzle/db";
 import { chatSessions } from "./schema";
 import { eq, desc } from "drizzle-orm";
 
