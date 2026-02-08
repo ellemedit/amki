@@ -1,24 +1,20 @@
-import { randomUUID } from "crypto";
-import Link from "next/link";
-import { Button } from "@/components/ui/button";
-import { Check } from "lucide-react";
-import { BackButton } from "@/components/back-button";
-import { getLatestChatSession } from "@/features/chat/queries";
-import { ChatCardCreator } from "./chat-card-creator";
-import type { UIMessage } from "ai";
+import { Suspense } from 'react'
+import { randomUUID } from 'crypto'
+import Link from 'next/link'
+import { Button } from '@/components/ui/button'
+import { Skeleton } from '@/components/ui/skeleton'
+import { Check } from 'lucide-react'
+import { BackButton } from '@/components/back-button'
+import { getLatestChatSession } from '@/features/chat/queries'
+import { ChatCardCreator } from './chat-card-creator'
+import type { UIMessage } from 'ai'
 
 interface Props {
-  params: Promise<{ deckId: string }>;
+  params: Promise<{ deckId: string }>
 }
 
 export default async function NewCardPage({ params }: Props) {
-  const { deckId } = await params;
-  const session = await getLatestChatSession(deckId);
-
-  const chatId = session?.id ?? randomUUID();
-  const initialMessages = session
-    ? (session.messages as UIMessage[])
-    : undefined;
+  const { deckId } = await params
 
   return (
     <div className="flex min-h-screen flex-col bg-background">
@@ -42,11 +38,44 @@ export default async function NewCardPage({ params }: Props) {
         </div>
       </header>
 
-      <ChatCardCreator
-        deckId={deckId}
-        chatId={chatId}
-        initialMessages={initialMessages}
-      />
+      <Suspense fallback={<ChatSkeleton />}>
+        <ChatContent deckId={deckId} />
+      </Suspense>
     </div>
-  );
+  )
+}
+
+async function ChatContent({ deckId }: { deckId: string }) {
+  const session = await getLatestChatSession(deckId)
+
+  const chatId = session?.id ?? randomUUID()
+  const initialMessages = session
+    ? (session.messages as UIMessage[])
+    : undefined
+
+  return (
+    <ChatCardCreator
+      deckId={deckId}
+      chatId={chatId}
+      initialMessages={initialMessages}
+    />
+  )
+}
+
+function ChatSkeleton() {
+  return (
+    <div className="flex flex-1 flex-col">
+      <div className="flex-1 px-5 py-6">
+        <div className="mx-auto max-w-3xl space-y-4">
+          <Skeleton className="ml-auto h-10 w-48 rounded-2xl" />
+          <Skeleton className="h-24 w-64 rounded-2xl" />
+        </div>
+      </div>
+      <div className="border-t border-border/50 px-5 py-4">
+        <div className="mx-auto max-w-3xl">
+          <Skeleton className="h-11 w-full rounded-xl" />
+        </div>
+      </div>
+    </div>
+  )
 }
