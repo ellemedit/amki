@@ -56,7 +56,7 @@ flowchart TD
     ClickReveal --> ShowAnswer["💡 정답 표시<br/>카드 뒷면"]
 
     TypeAnswer --> SubmitAnswer[AI 채점 받기 제출]
-    SubmitAnswer --> AIGrading["🤖 AI 채점<br/>Claude Sonnet"]
+    SubmitAnswer --> AIGrading["🤖 AI 채점<br/>LLM"]
     AIGrading --> ShowFeedback[💡 정답 + AI 피드백 표시]
 
     ShowAnswer --> RateQuality["⭐ 품질 평가<br/>0~5점"]
@@ -84,12 +84,12 @@ flowchart TD
 
 ## 주요 화면 스크린샷
 
-| 화면                                                                                                                                                       | 스크린샷                                                                                                                                         |
-| ---------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------ |
-| **홈 화면 (덱 목록)** — 생성한 덱들을 카드 형태로 보여주며, 각 덱의 학습 통계와 복습 대기 카드 수를 한눈에 확인할 수 있습니다.                             | <img width="849" height="962" alt="홈 화면 - 덱 목록" src="https://github.com/user-attachments/assets/66b6fd0f-1d92-4dc8-acb5-def4dfc8f688" />   |
-| **덱 상세 페이지** — 선택한 덱의 통계(전체·새 카드·학습 중·복습 대기)와 카드 목록을 표시합니다. 카드 추가, 학습 시작, 편집 등의 액션을 수행할 수 있습니다. | <img width="803" height="956" alt="덱 상세 페이지" src="https://github.com/user-attachments/assets/08733994-0a25-45ae-b86c-87ed2830278b" />      |
-| **AI 채팅 카드 생성기** — Claude와 대화하며 텍스트·파일을 입력하면 AI가 핵심 개념을 추출하여 암기 카드 후보를 스트리밍으로 생성합니다.                     | <img width="840" height="483" alt="AI 채팅 카드 생성기" src="https://github.com/user-attachments/assets/4990518a-afb3-41b1-8e76-e1c0a3c806bb" /> |
-| **학습 세션** — SM-2 알고리즘 기반 간격 반복 학습 화면. 질문을 보고 답을 확인한 뒤 0~5점으로 품질 평가하면 다음 복습일이 자동 계산됩니다.                  | <img width="832" height="723" alt="학습 세션" src="https://github.com/user-attachments/assets/261f726a-578c-460d-80c9-f9dc322927fd" />           |
+| 화면                                                                                                                                                        | 스크린샷                                                                                                                                                |
+| ----------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| **덱 생성 화면** — 덱 이름·설명을 입력하고 파일(PDF·이미지·텍스트)을 첨부하면 AI가 핵심 개념을 추출하여 암기 카드를 자동 생성합니다.                        | <img width="849" height="962" alt="덱 생성 화면" src="https://github.com/user-attachments/assets/66b6fd0f-1d92-4dc8-acb5-def4dfc8f688" />               |
+| **AI 채팅 카드 생성** — Claude와 대화하며 텍스트·파일을 입력하면 카드 후보를 스트리밍으로 생성합니다. 생성된 카드를 검토·편집·삭제한 뒤 저장할 수 있습니다. | <img width="803" height="956" alt="AI 채팅 카드 생성" src="https://github.com/user-attachments/assets/08733994-0a25-45ae-b86c-87ed2830278b" />          |
+| **AI 주관식 채점 (1)** — 주관식 카드에 답변을 작성하면 LLM이 정답과 비교하여 채점하고, 상세한 피드백을 제공합니다.                                          | <img width="840" height="483" alt="AI 주관식 채점 - 답변 제출" src="https://github.com/user-attachments/assets/4990518a-afb3-41b1-8e76-e1c0a3c806bb" /> |
+| **AI 주관식 채점 (2)** — AI 채점 결과와 피드백을 확인한 뒤 0~5점으로 품질 평가하면 SM-2 알고리즘이 다음 복습일을 자동 계산합니다.                           | <img width="832" height="723" alt="AI 주관식 채점 - 결과 확인" src="https://github.com/user-attachments/assets/261f726a-578c-460d-80c9-f9dc322927fd" /> |
 
 <img width="397" height="861" alt="Image" src="https://github.com/user-attachments/assets/d1a77a5e-4cc7-4307-9a18-712b949042ba" />
 <img width="398" height="581" alt="Image" src="https://github.com/user-attachments/assets/8620d494-5c06-48d5-aadf-29a3ac612569" />
