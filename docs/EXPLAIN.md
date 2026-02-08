@@ -84,10 +84,10 @@ flowchart TD
 
 ## 주요 화면 스크린샷
 
-![첨부한 파일을 LLM이 해석하여 카드를 만들어주는 화면](./1.png)
-![채팅 UI로 플래시카드를 추가하는 화면](./2.png)
-![주관식 플래시카드를 채점하기 위해 제출하는 화면](./3.png)
-![LLM이 주관식 채점해주는 화면](./4.png)
+<img width="849" height="962" alt="Image" src="https://github.com/user-attachments/assets/66b6fd0f-1d92-4dc8-acb5-def4dfc8f688" />
+<img width="803" height="956" alt="Image" src="https://github.com/user-attachments/assets/08733994-0a25-45ae-b86c-87ed2830278b" />
+<img width="840" height="483" alt="Image" src="https://github.com/user-attachments/assets/4990518a-afb3-41b1-8e76-e1c0a3c806bb" />
+<img width="832" height="723" alt="Image" src="https://github.com/user-attachments/assets/261f726a-578c-460d-80c9-f9dc322927fd" />
 
 <img width="397" height="861" alt="Image" src="https://github.com/user-attachments/assets/d1a77a5e-4cc7-4307-9a18-712b949042ba" />
 <img width="398" height="581" alt="Image" src="https://github.com/user-attachments/assets/8620d494-5c06-48d5-aadf-29a3ac612569" />
