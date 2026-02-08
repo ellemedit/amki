@@ -84,10 +84,12 @@ flowchart TD
 
 ## 주요 화면 스크린샷
 
-<img width="849" height="962" alt="Image" src="https://github.com/user-attachments/assets/66b6fd0f-1d92-4dc8-acb5-def4dfc8f688" />
-<img width="803" height="956" alt="Image" src="https://github.com/user-attachments/assets/08733994-0a25-45ae-b86c-87ed2830278b" />
-<img width="840" height="483" alt="Image" src="https://github.com/user-attachments/assets/4990518a-afb3-41b1-8e76-e1c0a3c806bb" />
-<img width="832" height="723" alt="Image" src="https://github.com/user-attachments/assets/261f726a-578c-460d-80c9-f9dc322927fd" />
+| 화면                                                                                                                                                       | 스크린샷                                                                                                                                         |
+| ---------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------ |
+| **홈 화면 (덱 목록)** — 생성한 덱들을 카드 형태로 보여주며, 각 덱의 학습 통계와 복습 대기 카드 수를 한눈에 확인할 수 있습니다.                             | <img width="849" height="962" alt="홈 화면 - 덱 목록" src="https://github.com/user-attachments/assets/66b6fd0f-1d92-4dc8-acb5-def4dfc8f688" />   |
+| **덱 상세 페이지** — 선택한 덱의 통계(전체·새 카드·학습 중·복습 대기)와 카드 목록을 표시합니다. 카드 추가, 학습 시작, 편집 등의 액션을 수행할 수 있습니다. | <img width="803" height="956" alt="덱 상세 페이지" src="https://github.com/user-attachments/assets/08733994-0a25-45ae-b86c-87ed2830278b" />      |
+| **AI 채팅 카드 생성기** — Claude와 대화하며 텍스트·파일을 입력하면 AI가 핵심 개념을 추출하여 암기 카드 후보를 스트리밍으로 생성합니다.                     | <img width="840" height="483" alt="AI 채팅 카드 생성기" src="https://github.com/user-attachments/assets/4990518a-afb3-41b1-8e76-e1c0a3c806bb" /> |
+| **학습 세션** — SM-2 알고리즘 기반 간격 반복 학습 화면. 질문을 보고 답을 확인한 뒤 0~5점으로 품질 평가하면 다음 복습일이 자동 계산됩니다.                  | <img width="832" height="723" alt="학습 세션" src="https://github.com/user-attachments/assets/261f726a-578c-460d-80c9-f9dc322927fd" />           |
 
 <img width="397" height="861" alt="Image" src="https://github.com/user-attachments/assets/d1a77a5e-4cc7-4307-9a18-712b949042ba" />
 <img width="398" height="581" alt="Image" src="https://github.com/user-attachments/assets/8620d494-5c06-48d5-aadf-29a3ac612569" />
