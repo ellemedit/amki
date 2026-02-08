@@ -94,8 +94,8 @@ export async function POST(req: Request) {
     originalMessages: messages,
     // Server-side message ID generation for persistence consistency
     generateMessageId: createIdGenerator({ prefix: "msg", size: 16 }),
-    onFinish: ({ messages: finalMessages }) => {
-      upsertChatSession(chatId, deckId, finalMessages);
+    onFinish: async ({ messages: finalMessages }) => {
+      await upsertChatSession(chatId, deckId, finalMessages);
     },
     onError: (error) => {
       if (error instanceof Error) return error.message;
