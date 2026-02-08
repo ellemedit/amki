@@ -6,7 +6,6 @@ import {
   useEffect,
   useLayoutEffect,
   useTransition,
-  startTransition,
 } from 'react'
 import { useChat } from '@ai-sdk/react'
 import {
@@ -497,7 +496,7 @@ export function ChatCardCreator({
       setFiles((prev) => [...prev, ...newFiles]),
   })
 
-  const { messages, sendMessage, stop, status } = useChat({
+  const { messages, setMessages, sendMessage, stop, status } = useChat({
     id: chatId,
     messages: initialMessages,
     transport: new DefaultChatTransport({
@@ -526,14 +525,16 @@ export function ChatCardCreator({
   })
 
   function handleCardsSaved(toolCallId: string, count: number) {
-    setSavedCounts((prev) => {
-      const next = new Map(prev)
-      next.set(toolCallId, count)
-      try {
-        localStorage.setItem(`chat-saved:${chatId}`, JSON.stringify([...next]))
-      } catch {}
-      return next
-    })
+    toast.success(`${count}장의 카드가 덱에 추가되었습니다`)
+
+    // Reset chat for a fresh start
+    setMessages([])
+    setSavedCounts(new Map())
+    setInput('')
+    setFiles([])
+    try {
+      localStorage.removeItem(`chat-saved:${chatId}`)
+    } catch {}
   }
 
   const addedCount = Array.from(savedCounts.values()).reduce((a, b) => a + b, 0)
