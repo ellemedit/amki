@@ -1,6 +1,5 @@
 "use server";
 
-import { redirect } from "next/navigation";
 import { z } from "zod";
 import { db } from "@/db";
 import { insertDeck } from "@/features/decks/mutations";
@@ -40,6 +39,9 @@ export async function createDeckWithCards(input: CreateDeckWithCardsInput) {
     return created;
   });
 
+  // Server Action 컨텍스트이므로 updateTag 사용
   updateDecksCache();
-  redirect(`/decks/${deck.id}`);
+
+  // 클라이언트에서 router.replace()로 리디렉션하도록 deckId 반환
+  return { deckId: deck.id };
 }

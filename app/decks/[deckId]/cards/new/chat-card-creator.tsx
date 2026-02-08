@@ -1,6 +1,6 @@
 'use client'
 
-import { useRef, useState, useEffect, type DragEvent } from 'react'
+import { useRef, useState, useEffect, useCallback } from 'react'
 import { useChat } from '@ai-sdk/react'
 import {
   DefaultChatTransport,
@@ -21,8 +21,12 @@ import {
   Bot,
   ArrowUp,
 } from 'lucide-react'
-import { cn } from '@/lib/utils'
+import { cn } from '@/shared/utils'
 import { Markdown } from '@/components/markdown'
+import { useFileDrop } from '@/shared/hooks/use-file-drop'
+import { DragOverlay } from '@/components/drag-overlay'
+import { FileChip } from '@/components/file-chip'
+import type { FileAttachment } from '@/shared/file'
 
 // ---------------------------------------------------------------------------
 // Types
@@ -32,12 +36,6 @@ interface ChatCardCreatorProps {
   deckId: string
   initialMessages?: UIMessage[]
   chatId: string
-}
-
-interface FileAttachment {
-  name: string
-  type: string
-  url: string
 }
 
 // ---------------------------------------------------------------------------
@@ -50,13 +48,6 @@ function AiAvatar() {
       <Bot className="h-3.5 w-3.5 text-primary" />
     </div>
   )
-}
-
-function FileIcon({ type }: { type: string }) {
-  if (type.startsWith('image/')) return <ImageIcon className="h-3.5 w-3.5" />
-  if (type === 'application/pdf')
-    return <FileText className="h-3.5 w-3.5 text-red-400" />
-  return <FileText className="h-3.5 w-3.5" />
 }
 
 function UserTextBubble({ text }: { text: string }) {
@@ -276,44 +267,6 @@ function EmptyState({
 }
 
 // ---------------------------------------------------------------------------
-// File chip (in footer)
-// ---------------------------------------------------------------------------
-
-function FileChip({
-  file,
-  onRemove,
-}: {
-  file: FileAttachment
-  onRemove: () => void
-}) {
-  return (
-    <div className="flex items-center gap-1.5 rounded-lg border border-border/60 bg-card px-2.5 py-1.5 text-xs">
-      <FileIcon type={file.type} />
-      <span className="max-w-[120px] truncate">{file.name}</span>
-      <button
-        onClick={onRemove}
-        className="ml-0.5 text-muted-foreground transition-colors hover:text-foreground"
-      >
-        <X className="h-3 w-3" />
-      </button>
-    </div>
-  )
-}
-
-// ---------------------------------------------------------------------------
-// Utilities
-// ---------------------------------------------------------------------------
-
-function fileToDataURL(file: File): Promise<string> {
-  return new Promise((resolve, reject) => {
-    const reader = new FileReader()
-    reader.onload = () => resolve(reader.result as string)
-    reader.onerror = reject
-    reader.readAsDataURL(file)
-  })
-}
-
-// ---------------------------------------------------------------------------
 // Main component
 // ---------------------------------------------------------------------------
 
@@ -324,10 +277,16 @@ export function ChatCardCreator({
 }: ChatCardCreatorProps) {
   const [input, setInput] = useState('')
   const [files, setFiles] = useState<FileAttachment[]>([])
-  const [isDragging, setIsDragging] = useState(false)
-  const fileInputRef = useRef<HTMLInputElement>(null)
   const textareaRef = useRef<HTMLTextAreaElement>(null)
   const messagesEndRef = useRef<HTMLDivElement>(null)
+
+  const { isDragging, dropHandlers, openFilePicker, FileInput } = useFileDrop({
+    onFiles: useCallback(
+      (newFiles: FileAttachment[]) =>
+        setFiles((prev) => [...prev, ...newFiles]),
+      [],
+    ),
+  })
 
   const { messages, sendMessage, status } = useChat({
     id: chatId,
@@ -364,33 +323,6 @@ export function ChatCardCreator({
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' })
   }, [messages, isLoading])
 
-  async function handleFileSelect(selectedFiles: FileList) {
-    const newFiles: FileAttachment[] = []
-    for (const file of Array.from(selectedFiles)) {
-      const url = await fileToDataURL(file)
-      newFiles.push({ name: file.name, type: file.type, url })
-    }
-    setFiles((prev) => [...prev, ...newFiles])
-  }
-
-  function handleDragOver(e: DragEvent) {
-    e.preventDefault()
-    setIsDragging(true)
-  }
-
-  function handleDragLeave(e: DragEvent) {
-    e.preventDefault()
-    setIsDragging(false)
-  }
-
-  function handleDrop(e: DragEvent) {
-    e.preventDefault()
-    setIsDragging(false)
-    if (e.dataTransfer.files.length > 0) {
-      handleFileSelect(e.dataTransfer.files)
-    }
-  }
-
   function removeFile(index: number) {
     setFiles((prev) => prev.filter((_, i) => i !== index))
   }
@@ -408,7 +340,7 @@ export function ChatCardCreator({
     }
 
     for (const file of files) {
-      parts.push({ type: 'file', mediaType: file.type, url: file.url })
+      parts.push({ type: 'file', mediaType: file.mediaType, url: file.url })
     }
 
     sendMessage({ parts })
@@ -428,12 +360,7 @@ export function ChatCardCreator({
   return (
     <div className="flex h-[calc(100vh-73px)] flex-col">
       {/* Messages */}
-      <div
-        className="flex-1 overflow-y-auto"
-        onDragOver={handleDragOver}
-        onDragLeave={handleDragLeave}
-        onDrop={handleDrop}
-      >
+      <div className="flex-1 overflow-y-auto" {...dropHandlers}>
         <div className="mx-auto max-w-[640px] space-y-8 px-5 py-8">
           {messages.length === 0 && (
             <EmptyState
@@ -461,17 +388,7 @@ export function ChatCardCreator({
           <div ref={messagesEndRef} />
         </div>
 
-        {isDragging && (
-          <div className="fixed inset-0 z-50 flex items-center justify-center bg-background/80 backdrop-blur-md">
-            <div className="rounded-2xl border-2 border-dashed border-primary/40 bg-card/80 px-16 py-14 text-center shadow-2xl">
-              <Paperclip className="mx-auto mb-5 h-10 w-10 text-primary" />
-              <p className="text-base font-medium">파일을 여기에 놓으세요</p>
-              <p className="mt-1 text-sm text-muted-foreground">
-                PDF, 이미지, 텍스트 파일 지원
-              </p>
-            </div>
-          </div>
-        )}
+        {isDragging && <DragOverlay icon={Paperclip} />}
       </div>
 
       {/* Footer */}
@@ -507,21 +424,12 @@ export function ChatCardCreator({
             )}
 
             <div className="relative flex items-end gap-2 rounded-xl border border-border/60 bg-card px-3 py-2 shadow-sm transition-colors focus-within:border-primary/30 focus-within:shadow-primary/5">
-              <input
-                ref={fileInputRef}
-                type="file"
-                multiple
-                accept="image/*,.pdf,.txt,.md,.csv"
-                className="hidden"
-                onChange={(e) => {
-                  if (e.target.files) handleFileSelect(e.target.files)
-                  e.target.value = ''
-                }}
-              />
+              <FileInput />
               <button
                 className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg text-muted-foreground transition-colors hover:bg-muted hover:text-foreground"
-                onClick={() => fileInputRef.current?.click()}
+                onClick={openFilePicker}
                 disabled={isLoading}
+                aria-label="파일 첨부"
               >
                 <Paperclip className="h-4 w-4" />
               </button>
@@ -544,6 +452,7 @@ export function ChatCardCreator({
                 )}
                 onClick={handleSubmit}
                 disabled={isLoading || !canSend}
+                aria-label="전송"
               >
                 <ArrowUp className="h-4 w-4" />
               </button>

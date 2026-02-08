@@ -6,7 +6,7 @@ import { z } from "zod";
 import { db } from "@/db";
 import { cardProgress } from "@/features/study/schema";
 import { eq } from "drizzle-orm";
-import { calculateSM2, SM2_DEFAULTS } from "@/lib/sm2";
+import { calculateSM2, SM2_DEFAULTS } from "@/shared/sm2";
 import { upsertProgress, insertReviewLog } from "@/features/study/mutations";
 import { updateCardsCache } from "@/features/cards/queries";
 import { updateDecksCache } from "@/features/decks/queries";
@@ -15,6 +15,14 @@ import { updateDecksCache } from "@/features/decks/queries";
 // submitReview
 // ---------------------------------------------------------------------------
 
+const submitReviewSchema = z.object({
+  cardId: z.string().min(1),
+  deckId: z.string().min(1),
+  quality: z.number().int().min(0).max(5),
+  userAnswer: z.string().optional(),
+  aiFeedback: z.string().optional(),
+});
+
 export async function submitReview(
   cardId: string,
   deckId: string,
@@ -22,6 +30,17 @@ export async function submitReview(
   userAnswer?: string,
   aiFeedback?: string,
 ) {
+  const parsed = submitReviewSchema.safeParse({
+    cardId,
+    deckId,
+    quality,
+    userAnswer,
+    aiFeedback,
+  });
+  if (!parsed.success) {
+    throw new Error(parsed.error.issues[0].message);
+  }
+
   const result = await db.transaction(async (tx) => {
     const [existing] = await tx
       .select()
@@ -86,6 +105,12 @@ function qualityFromSimilarity(similarity: number): number {
   return similarityThresholds.find(([t]) => similarity >= t)?.[1] ?? 0;
 }
 
+/**
+ * AI를 사용하여 서술형 답안을 채점합니다.
+ *
+ * 전략: AI 채점(Claude Sonnet) → Jaccard 텍스트 유사도 폴백.
+ * API 키 미설정이나 네트워크 오류 시 유사도 기반으로 자동 전환됩니다.
+ */
 export async function gradeSubjectiveAnswer(
   question: string,
   correctAnswer: string,
@@ -120,7 +145,7 @@ Provide your feedback in Korean. Be concise (1-2 sentences).`,
     }
     return output;
   } catch {
-    const { calculateSimpleSimilarity } = await import("@/lib/similarity");
+    const { calculateSimpleSimilarity } = await import("@/shared/similarity");
     const similarity = calculateSimpleSimilarity(correctAnswer, userAnswer);
 
     return {

@@ -1,3 +1,13 @@
+/**
+ * 학습 진행도(Study) 테이블 스키마.
+ *
+ * SM-2 간격 반복 알고리즘의 상태를 저장합니다:
+ * - cardProgress: 카드별 SM-2 파라미터 (repetitions, easinessFactor, intervalDays)
+ * - reviewLogs: 학습 이력 (quality, userAnswer, aiFeedback)
+ *
+ * cardProgress.status 상태 전이: new → learning → review
+ */
+
 import {
   integer,
   pgTable,

@@ -1,16 +1,16 @@
-import { Suspense } from "react";
-import { randomUUID } from "crypto";
-import Link from "next/link";
-import { Button } from "@/components/ui/button";
-import { Skeleton } from "@/components/ui/skeleton";
-import { Check } from "lucide-react";
-import { BackButton } from "@/components/back-button";
-import { getLatestChatSession } from "@/features/chat/queries";
-import { ChatCardCreator } from "./chat-card-creator";
-import type { UIMessage } from "ai";
+import { Suspense } from 'react'
+import { randomUUID } from 'crypto'
+import Link from 'next/link'
+import { Button } from '@/components/ui/button'
+import { Skeleton } from '@/components/ui/skeleton'
+import { Check } from 'lucide-react'
+import { BackButton } from '@/components/back-button'
+import { getLatestChatSession } from '@/features/chat/queries'
+import { ChatCardCreator } from './chat-card-creator'
+import { parseUIMessages } from '@/features/chat/utils'
 
 interface Props {
-  params: Promise<{ deckId: string }>;
+  params: Promise<{ deckId: string }>
 }
 
 export default function NewCardPage({ params }: Props) {
@@ -18,21 +18,21 @@ export default function NewCardPage({ params }: Props) {
     <Suspense fallback={<ChatSkeleton />}>
       <ChatContent params={params} />
     </Suspense>
-  );
+  )
 }
 
 async function ChatContent({
   params,
 }: {
-  params: Promise<{ deckId: string }>;
+  params: Promise<{ deckId: string }>
 }) {
-  const { deckId } = await params;
-  const session = await getLatestChatSession(deckId);
+  const { deckId } = await params
+  const session = await getLatestChatSession(deckId)
 
-  const chatId = session?.id ?? randomUUID();
+  const chatId = session?.id ?? randomUUID()
   const initialMessages = session
-    ? (session.messages as UIMessage[])
-    : undefined;
+    ? parseUIMessages(session.messages)
+    : undefined
 
   return (
     <div className="flex min-h-screen flex-col bg-background">
@@ -62,7 +62,7 @@ async function ChatContent({
         initialMessages={initialMessages}
       />
     </div>
-  );
+  )
 }
 
 function ChatSkeleton() {
@@ -92,5 +92,5 @@ function ChatSkeleton() {
         </div>
       </div>
     </div>
-  );
+  )
 }

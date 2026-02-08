@@ -1,7 +1,7 @@
 'use client'
 
 import { useTransition, useState } from 'react'
-import { useFormStatus } from 'react-dom'
+import { useRouter } from 'next/navigation'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Textarea } from '@/components/ui/textarea'
@@ -15,32 +15,11 @@ import {
   DialogTitle,
   DialogTrigger,
 } from '@/components/ui/dialog'
-import { Pencil, Trash2, Loader2 } from 'lucide-react'
+import { Pencil, Trash2 } from 'lucide-react'
+import { toast } from 'sonner'
 import { updateDeck, deleteDeck } from './actions'
-
-// ---------------------------------------------------------------------------
-// Shared form buttons (useFormStatus must be in a child of <form>)
-// ---------------------------------------------------------------------------
-
-function FormButtons({ onCancel }: { onCancel: () => void }) {
-  const { pending } = useFormStatus()
-  return (
-    <>
-      <Button
-        type="button"
-        variant="outline"
-        onClick={onCancel}
-        disabled={pending}
-      >
-        취소
-      </Button>
-      <Button type="submit" disabled={pending}>
-        {pending && <Loader2 className="mr-1.5 h-3.5 w-3.5 animate-spin" />}
-        저장
-      </Button>
-    </>
-  )
-}
+import { FormButtons } from '@/components/form-buttons'
+import { ConfirmDialog } from '@/components/confirm-dialog'
 
 // ---------------------------------------------------------------------------
 // Edit Deck Dialog
@@ -78,7 +57,9 @@ export function EditDeckButton({
         <form
           action={async (formData) => {
             const result = await updateDeck(deckId, formData)
-            if (!result?.error) {
+            if (result?.error) {
+              toast.error(result.error)
+            } else {
               startTransition(() => setOpen(false))
             }
           }}
@@ -119,12 +100,11 @@ export function EditDeckButton({
 // ---------------------------------------------------------------------------
 
 export function DeleteDeckButton({ deckId }: { deckId: string }) {
-  const [open, setOpen] = useState(false)
-  const [isPending, startTransition] = useTransition()
+  const router = useRouter()
 
   return (
-    <Dialog open={open} onOpenChange={setOpen}>
-      <DialogTrigger asChild>
+    <ConfirmDialog
+      trigger={
         <Button
           variant="ghost"
           size="icon"
@@ -132,37 +112,13 @@ export function DeleteDeckButton({ deckId }: { deckId: string }) {
         >
           <Trash2 className="h-4 w-4" />
         </Button>
-      </DialogTrigger>
-      <DialogContent>
-        <DialogHeader>
-          <DialogTitle>덱 삭제</DialogTitle>
-          <DialogDescription>
-            이 덱과 포함된 모든 카드가 영구적으로 삭제됩니다. 이 작업은 되돌릴
-            수 없습니다.
-          </DialogDescription>
-        </DialogHeader>
-        <DialogFooter>
-          <Button
-            variant="outline"
-            onClick={() => setOpen(false)}
-            disabled={isPending}
-          >
-            취소
-          </Button>
-          <Button
-            variant="destructive"
-            disabled={isPending}
-            onClick={() => {
-              startTransition(() => deleteDeck(deckId))
-            }}
-          >
-            {isPending && (
-              <Loader2 className="mr-1.5 h-3.5 w-3.5 animate-spin" />
-            )}
-            삭제
-          </Button>
-        </DialogFooter>
-      </DialogContent>
-    </Dialog>
+      }
+      title="덱 삭제"
+      description="이 덱과 포함된 모든 카드가 영구적으로 삭제됩니다. 이 작업은 되돌릴 수 없습니다."
+      onConfirm={async () => {
+        await deleteDeck(deckId)
+        router.replace('/')
+      }}
+    />
   )
 }

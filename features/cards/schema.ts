@@ -1,3 +1,13 @@
+/**
+ * 카드(Card) 테이블 스키마.
+ *
+ * 각 카드는 하나의 덱에 속하며, 앞면(질문)/뒷면(답) 쌍으로 구성됩니다.
+ * - basic: 사용자가 스스로 평가하는 기본 카드
+ * - subjective: AI가 서술형 답안을 채점하는 카드
+ *
+ * 학습 진행도는 study/schema.ts의 cardProgress 테이블에서 관리됩니다.
+ */
+
 import { pgTable, text, timestamp, uuid, varchar } from "drizzle-orm/pg-core";
 import { decks } from "@/features/decks/schema";
 

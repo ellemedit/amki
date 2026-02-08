@@ -1,6 +1,7 @@
 'use client'
 
-import { useReducer, useRef, useTransition, type DragEvent } from 'react'
+import { useReducer, useTransition, useCallback } from 'react'
+import { useRouter } from 'next/navigation'
 import Link from 'next/link'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
@@ -10,9 +11,6 @@ import { Badge } from '@/components/ui/badge'
 import { BackButton } from '@/components/back-button'
 import {
   Upload,
-  FileText,
-  ImageIcon,
-  X,
   Plus,
   Trash2,
   Loader2,
@@ -20,8 +18,12 @@ import {
   CheckCircle2,
   Circle,
 } from 'lucide-react'
-import { cn } from '@/lib/utils'
+import { cn } from '@/shared/utils'
 import { createDeckWithCards } from './actions'
+import { useFileDrop } from '@/shared/hooks/use-file-drop'
+import { DragOverlay } from '@/components/drag-overlay'
+import { FileChip } from '@/components/file-chip'
+import type { FileAttachment } from '@/shared/file'
 
 // ---------------------------------------------------------------------------
 // Types
@@ -35,12 +37,6 @@ interface CardDraft {
   selected: boolean
 }
 
-interface FileAttachment {
-  name: string
-  mediaType: string
-  url: string
-}
-
 // ---------------------------------------------------------------------------
 // Reducer
 // ---------------------------------------------------------------------------
@@ -51,14 +47,12 @@ interface FormState {
   cards: CardDraft[]
   uploadedFiles: FileAttachment[]
   isGenerating: boolean
-  isDragging: boolean
   error: string | null
 }
 
 type FormAction =
   | { type: 'SET_NAME'; value: string }
   | { type: 'SET_DESCRIPTION'; value: string }
-  | { type: 'SET_DRAGGING'; value: boolean }
   | { type: 'SET_ERROR'; value: string | null }
   | { type: 'GENERATE_START' }
   | { type: 'GENERATE_SUCCESS'; files: FileAttachment[]; cards: CardDraft[] }
@@ -76,7 +70,6 @@ const initialState: FormState = {
   cards: [],
   uploadedFiles: [],
   isGenerating: false,
-  isDragging: false,
   error: null,
 }
 
@@ -86,8 +79,6 @@ function formReducer(state: FormState, action: FormAction): FormState {
       return { ...state, name: action.value }
     case 'SET_DESCRIPTION':
       return { ...state, description: action.value }
-    case 'SET_DRAGGING':
-      return { ...state, isDragging: action.value }
     case 'SET_ERROR':
       return { ...state, error: action.value }
     case 'GENERATE_START':
@@ -146,46 +137,9 @@ function generateId() {
   return Math.random().toString(36).slice(2, 10)
 }
 
-function fileToDataURL(file: File): Promise<string> {
-  return new Promise((resolve, reject) => {
-    const reader = new FileReader()
-    reader.onload = () => resolve(reader.result as string)
-    reader.onerror = reject
-    reader.readAsDataURL(file)
-  })
-}
-
 // ---------------------------------------------------------------------------
 // Sub-components
 // ---------------------------------------------------------------------------
-
-function FileIcon({ mediaType }: { mediaType: string }) {
-  if (mediaType.startsWith('image/'))
-    return <ImageIcon className="h-3.5 w-3.5" />
-  return <FileText className="h-3.5 w-3.5" />
-}
-
-function FileChip({
-  file,
-  onRemove,
-}: {
-  file: FileAttachment
-  onRemove: () => void
-}) {
-  return (
-    <div className="flex items-center gap-1.5 rounded-lg border border-border/60 bg-card px-2.5 py-1.5 text-xs">
-      <FileIcon mediaType={file.mediaType} />
-      <span className="max-w-[140px] truncate">{file.name}</span>
-      <button
-        type="button"
-        onClick={onRemove}
-        className="ml-0.5 text-muted-foreground transition-colors hover:text-foreground"
-      >
-        <X className="h-3 w-3" />
-      </button>
-    </div>
-  )
-}
 
 function CardItem({
   card,
@@ -281,34 +235,20 @@ function CardItem({
 // ---------------------------------------------------------------------------
 
 export function DeckCreatorForm() {
+  const router = useRouter()
   const [state, dispatch] = useReducer(formReducer, initialState)
   const [isPending, startTransition] = useTransition()
-  const fileInputRef = useRef<HTMLInputElement>(null)
 
-  const {
-    name,
-    description,
-    cards,
-    uploadedFiles,
-    isGenerating,
-    isDragging,
-    error,
-  } = state
+  const { name, description, cards, uploadedFiles, isGenerating, error } = state
   const selectedCount = cards.filter((c) => c.selected).length
   const allSelected = cards.length > 0 && cards.every((c) => c.selected)
 
-  // ---- File handling ----
+  // ---- File handling (via useFileDrop hook) ----
 
-  async function handleFileSelect(fileList: FileList) {
+  const handleFiles = useCallback(async (files: FileAttachment[]) => {
     dispatch({ type: 'GENERATE_START' })
 
     try {
-      const files: FileAttachment[] = []
-      for (const file of Array.from(fileList)) {
-        const url = await fileToDataURL(file)
-        files.push({ name: file.name, mediaType: file.type, url })
-      }
-
       const response = await fetch('/api/cards/generate', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -344,25 +284,11 @@ export function DeckCreatorForm() {
         error: err instanceof Error ? err.message : '오류가 발생했습니다.',
       })
     }
-  }
+  }, [])
 
-  function handleDragOver(e: DragEvent) {
-    e.preventDefault()
-    dispatch({ type: 'SET_DRAGGING', value: true })
-  }
-
-  function handleDragLeave(e: DragEvent) {
-    e.preventDefault()
-    dispatch({ type: 'SET_DRAGGING', value: false })
-  }
-
-  function handleDrop(e: DragEvent) {
-    e.preventDefault()
-    dispatch({ type: 'SET_DRAGGING', value: false })
-    if (e.dataTransfer.files.length > 0) {
-      handleFileSelect(e.dataTransfer.files)
-    }
-  }
+  const { isDragging, dropHandlers, openFilePicker, FileInput } = useFileDrop({
+    onFiles: handleFiles,
+  })
 
   // ---- Submit ----
 
@@ -386,6 +312,8 @@ export function DeckCreatorForm() {
       })
       if (result?.error) {
         dispatch({ type: 'SET_ERROR', value: result.error })
+      } else if (result?.deckId) {
+        router.replace(`/decks/${result.deckId}`)
       }
     })
   }
@@ -393,12 +321,7 @@ export function DeckCreatorForm() {
   // ---- Render ----
 
   return (
-    <div
-      className="min-h-screen bg-background"
-      onDragOver={handleDragOver}
-      onDragLeave={handleDragLeave}
-      onDrop={handleDrop}
-    >
+    <div className="min-h-screen bg-background" {...dropHandlers}>
       <header className="border-b border-border/50">
         <div className="mx-auto flex max-w-3xl items-center gap-4 px-5 py-5">
           <BackButton />
@@ -452,7 +375,7 @@ export function DeckCreatorForm() {
             <Label className="text-[13px]">파일로 카드 생성 (선택)</Label>
 
             <div
-              onClick={() => !isGenerating && fileInputRef.current?.click()}
+              onClick={() => !isGenerating && openFilePicker()}
               className={cn(
                 'flex cursor-pointer flex-col items-center justify-center rounded-xl border-2 border-dashed px-6 py-10 text-center transition-all',
                 isDragging
@@ -461,17 +384,7 @@ export function DeckCreatorForm() {
                 isGenerating && 'pointer-events-none',
               )}
             >
-              <input
-                ref={fileInputRef}
-                type="file"
-                multiple
-                accept="image/*,.pdf,.txt,.md,.csv"
-                className="hidden"
-                onChange={(e) => {
-                  if (e.target.files) handleFileSelect(e.target.files)
-                  e.target.value = ''
-                }}
-              />
+              <FileInput />
 
               {isGenerating ? (
                 <>
@@ -607,17 +520,7 @@ export function DeckCreatorForm() {
       </main>
 
       {/* ── Full-page drag overlay ── */}
-      {isDragging && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-background/80 backdrop-blur-md">
-          <div className="rounded-2xl border-2 border-dashed border-primary/40 bg-card/80 px-16 py-14 text-center shadow-2xl">
-            <Upload className="mx-auto mb-5 h-10 w-10 text-primary" />
-            <p className="text-base font-medium">파일을 여기에 놓으세요</p>
-            <p className="mt-1 text-sm text-muted-foreground">
-              PDF, 이미지, 텍스트 파일 지원
-            </p>
-          </div>
-        </div>
-      )}
+      {isDragging && <DragOverlay icon={Upload} />}
     </div>
   )
 }

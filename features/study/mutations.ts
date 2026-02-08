@@ -1,6 +1,6 @@
 import { db, type Transactable } from "@/db";
 import { cardProgress, reviewLogs, type WriteReviewLog } from "./schema";
-import type { SM2Result } from "@/lib/sm2";
+import type { SM2Result } from "@/shared/sm2";
 
 export async function upsertProgress(
   cardId: string,

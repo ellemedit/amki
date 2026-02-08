@@ -1,7 +1,6 @@
 'use client'
 
 import { useTransition, useState } from 'react'
-import { useFormStatus } from 'react-dom'
 import { Button } from '@/components/ui/button'
 import { Textarea } from '@/components/ui/textarea'
 import { Label } from '@/components/ui/label'
@@ -14,32 +13,11 @@ import {
   DialogTitle,
   DialogTrigger,
 } from '@/components/ui/dialog'
-import { Pencil, Trash2, Loader2 } from 'lucide-react'
-import { updateCard, deleteCard } from './actions'
-
-// ---------------------------------------------------------------------------
-// Shared form buttons (useFormStatus must be in a child of <form>)
-// ---------------------------------------------------------------------------
-
-function FormButtons({ onCancel }: { onCancel: () => void }) {
-  const { pending } = useFormStatus()
-  return (
-    <>
-      <Button
-        type="button"
-        variant="outline"
-        onClick={onCancel}
-        disabled={pending}
-      >
-        취소
-      </Button>
-      <Button type="submit" disabled={pending}>
-        {pending && <Loader2 className="mr-1.5 h-3.5 w-3.5 animate-spin" />}
-        저장
-      </Button>
-    </>
-  )
-}
+import { Pencil, Trash2 } from 'lucide-react'
+import { toast } from 'sonner'
+import { updateCard, deleteCard } from './card-actions-server'
+import { FormButtons } from '@/components/form-buttons'
+import { ConfirmDialog } from '@/components/confirm-dialog'
 
 // ---------------------------------------------------------------------------
 // Edit Card Dialog
@@ -83,7 +61,9 @@ export function EditCardButton({
         <form
           action={async (formData) => {
             const result = await updateCard(deckId, cardId, formData)
-            if (!result?.error) {
+            if (result?.error) {
+              toast.error(result.error)
+            } else {
               startTransition(() => setOpen(false))
             }
           }}
@@ -133,12 +113,9 @@ export function DeleteCardButton({
   deckId: string
   cardId: string
 }) {
-  const [open, setOpen] = useState(false)
-  const [isPending, startTransition] = useTransition()
-
   return (
-    <Dialog open={open} onOpenChange={setOpen}>
-      <DialogTrigger asChild>
+    <ConfirmDialog
+      trigger={
         <Button
           variant="ghost"
           size="icon"
@@ -146,40 +123,12 @@ export function DeleteCardButton({
         >
           <Trash2 className="h-3 w-3" />
         </Button>
-      </DialogTrigger>
-      <DialogContent>
-        <DialogHeader>
-          <DialogTitle>카드 삭제</DialogTitle>
-          <DialogDescription>
-            이 카드와 학습 기록이 영구적으로 삭제됩니다. 이 작업은 되돌릴 수
-            없습니다.
-          </DialogDescription>
-        </DialogHeader>
-        <DialogFooter>
-          <Button
-            variant="outline"
-            onClick={() => setOpen(false)}
-            disabled={isPending}
-          >
-            취소
-          </Button>
-          <Button
-            variant="destructive"
-            disabled={isPending}
-            onClick={() => {
-              startTransition(async () => {
-                await deleteCard(deckId, cardId)
-                setOpen(false)
-              })
-            }}
-          >
-            {isPending && (
-              <Loader2 className="mr-1.5 h-3.5 w-3.5 animate-spin" />
-            )}
-            삭제
-          </Button>
-        </DialogFooter>
-      </DialogContent>
-    </Dialog>
+      }
+      title="카드 삭제"
+      description="이 카드와 학습 기록이 영구적으로 삭제됩니다. 이 작업은 되돌릴 수 없습니다."
+      onConfirm={async () => {
+        await deleteCard(deckId, cardId)
+      }}
+    />
   )
 }

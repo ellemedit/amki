@@ -14,6 +14,11 @@ import { revalidateCardsCache } from "@/features/cards/queries";
 import { revalidateDecksCache } from "@/features/decks/queries";
 import { upsertChatSession } from "@/features/chat/mutations";
 import { getChatSession } from "@/features/chat/queries";
+import { parseUIMessages } from "@/features/chat/utils";
+import {
+  HAIKU_MODEL,
+  CHAT_CARD_ASSISTANT_PROMPT,
+} from "@/features/cards/ai-config";
 
 export const maxDuration = 60;
 
@@ -47,6 +52,7 @@ function createTools(deckId: string) {
       execute: async ({ cards }) => {
         if (cards.length > 0) {
           await insertCards(cards.map((c) => ({ deckId, ...c })));
+          // Route Handler 컨텍스트이므로 revalidateTag 사용
           revalidateCardsCache(deckId);
           revalidateDecksCache();
         }
@@ -67,11 +73,11 @@ export async function POST(req: Request) {
 
   const tools = createTools(deckId);
 
-  // Load previous messages from DB instead of receiving all from client
+  // 이전 메시지를 DB에서 로드 (클라이언트에서 전체 전송하지 않음)
   const session = await getChatSession(chatId);
-  const previousMessages = (session?.messages as UIMessage[]) ?? [];
+  const previousMessages = parseUIMessages(session?.messages);
 
-  // Validate messages (tools may have changed between deploys)
+  // 메시지 검증 (배포 간 도구 스키마 변경 대응)
   let messages: UIMessage[];
   try {
     messages = await validateUIMessages({
@@ -79,38 +85,25 @@ export async function POST(req: Request) {
       tools: tools as Parameters<typeof validateUIMessages>[0]["tools"],
     });
   } catch {
-    // Old messages may have incompatible tool schemas — start fresh
+    // 이전 메시지가 호환되지 않으면 새 메시지만으로 시작
     messages = [message];
   }
 
   const result = streamText({
-    model: anthropic("claude-haiku-4-5-20251001"),
-    system: `당신은 암기 카드(flashcard) 제작을 도와주는 AI 어시스턴트입니다.
-
-사용자가 텍스트, 이미지, PDF, 링크 등의 학습 자료를 제공하면:
-1. 핵심 개념을 파악하세요
-2. generateCards 도구를 사용하여 카드를 한 번에 생성하세요
-3. 생성 결과를 요약해서 알려주세요
-
-카드 작성 가이드라인:
-- 앞면(질문)은 명확하고 구체적으로
-- 뒷면(답)은 간결하지만 충분한 정보를 포함
-- 하나의 카드에 하나의 개념만 담으세요
-- 일반적으로 basic 유형, 서술형 답변이 필요하면 subjective 유형을 사용하세요
-- 5~20장 사이의 카드를 한 번의 generateCards 호출에 모두 담아주세요
-- 카드를 추가한 후에는 어떤 카드를 만들었는지 요약해서 알려주세요`,
+    model: HAIKU_MODEL,
+    system: CHAT_CARD_ASSISTANT_PROMPT,
     messages: await convertToModelMessages(messages),
     tools,
     maxOutputTokens: 4096,
     stopWhen: stepCountIs(3),
   });
 
-  // Consume stream so onFinish fires even if client disconnects
+  // 클라이언트가 연결을 끊어도 onFinish가 실행되도록 스트림을 소비
   result.consumeStream();
 
   return result.toUIMessageStreamResponse({
     originalMessages: messages,
-    // Server-side message ID generation for persistence consistency
+    // 서버 측 메시지 ID 생성 (영속성 일관성 보장)
     generateMessageId: createIdGenerator({ prefix: "msg", size: 16 }),
     onFinish: async ({ messages: finalMessages }) => {
       await upsertChatSession(chatId, deckId, finalMessages);

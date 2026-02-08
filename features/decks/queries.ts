@@ -1,3 +1,12 @@
+/**
+ * 덱 쿼리 및 캐싱.
+ *
+ * 캐싱 전략:
+ * - `"use cache"` + `cacheTag`로 cross-request 캐싱 활성화
+ * - updateTag: Server Action/Server Component에서 동기적 무효화
+ * - revalidateTag: Route Handler에서 비동기적 재검증
+ */
+
 import { cacheTag, revalidateTag, updateTag } from "next/cache";
 import { db } from "@/db";
 import { decks } from "./schema";
@@ -12,16 +21,22 @@ function getDecksCacheKey() {
   return "decks" as const;
 }
 
+/** Server Action / Server Component에서 사용. 동기적으로 단건 덱 캐시를 무효화합니다. */
 export function updateDeckCache(deckId: string) {
   updateTag(getDeckCacheKey(deckId));
 }
+
+/** Route Handler에서 사용. 비동기적으로 단건 덱 캐시를 재검증합니다. */
 export function revalidateDeckCache(deckId: string) {
   revalidateTag(getDeckCacheKey(deckId), "max");
 }
 
+/** Server Action / Server Component에서 사용. 동기적으로 덱 목록 캐시를 무효화합니다. */
 export function updateDecksCache() {
   updateTag(getDecksCacheKey());
 }
+
+/** Route Handler에서 사용. 비동기적으로 덱 목록 캐시를 재검증합니다. */
 export function revalidateDecksCache() {
   revalidateTag(getDecksCacheKey(), "max");
 }
