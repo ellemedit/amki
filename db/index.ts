@@ -2,7 +2,7 @@ import { drizzle } from "drizzle-orm/postgres-js";
 import postgres from "postgres";
 import * as schema from "./schema";
 
-const connectionString = process.env.DATABASE_URL!;
+const connectionString = (process.env.SUPA_POSTGRES_URL ?? process.env.DATABASE_URL)!;
 
 // 개발 모드에서 HMR마다 새 연결 풀이 생기는 것을 방지
 const globalForDb = globalThis as unknown as { pgClient?: postgres.Sql };
