@@ -65,10 +65,26 @@ export async function getDecksWithCardCounts() {
         .innerJoin(cards, eq(cards.id, cardProgress.cardId))
         .where(eq(cards.deckId, deck.id));
 
+      const [dueReview] = await db
+        .select({ count: count() })
+        .from(cardProgress)
+        .innerJoin(cards, eq(cards.id, cardProgress.cardId))
+        .where(
+          and(
+            eq(cards.deckId, deck.id),
+            lte(cardProgress.nextReviewDate, new Date()),
+          ),
+        );
+
+      const totalCards = cardCount?.count ?? 0;
+      const newCards = totalCards - (withProgress?.count ?? 0);
+      const dueCount = (dueReview?.count ?? 0) + newCards;
+
       return {
         ...deck,
-        totalCards: cardCount?.count ?? 0,
-        newCards: (cardCount?.count ?? 0) - (withProgress?.count ?? 0),
+        totalCards,
+        newCards,
+        dueCount,
       };
     }),
   );
@@ -76,36 +92,3 @@ export async function getDecksWithCardCounts() {
   return result;
 }
 
-/**
- * 덱별 복습 대기 카드 수
- */
-export async function getDueCount(deckId: string) {
-  "use cache";
-  cacheTag(getDeckCacheKey(deckId));
-
-  const [dueCount] = await db
-    .select({ count: count() })
-    .from(cardProgress)
-    .innerJoin(cards, eq(cards.id, cardProgress.cardId))
-    .where(
-      and(
-        eq(cards.deckId, deckId),
-        lte(cardProgress.nextReviewDate, new Date()),
-      ),
-    );
-
-  const [totalCards] = await db
-    .select({ count: count() })
-    .from(cards)
-    .where(eq(cards.deckId, deckId));
-
-  const [withProgress] = await db
-    .select({ count: count() })
-    .from(cardProgress)
-    .innerJoin(cards, eq(cards.id, cardProgress.cardId))
-    .where(eq(cards.deckId, deckId));
-
-  const newCards = (totalCards?.count ?? 0) - (withProgress?.count ?? 0);
-
-  return (dueCount?.count ?? 0) + newCards;
-}
