@@ -2,6 +2,7 @@ import {
   convertToModelMessages,
   createIdGenerator,
   streamText,
+  tool,
   UIMessage,
   stepCountIs,
   validateUIMessages,
@@ -16,24 +17,32 @@ import { getChatSession } from "@/features/chat/queries";
 
 export const maxDuration = 60;
 
-const tools = {
-  cardAdd: {
-    description:
-      "덱에 새로운 암기 카드를 추가합니다. 앞면에는 질문을, 뒷면에는 답을 넣습니다.",
-    inputSchema: z.object({
-      front: z
-        .string()
-        .describe("카드 앞면 - 질문 또는 암기할 내용의 프롬프트"),
-      back: z.string().describe("카드 뒷면 - 정답 또는 암기할 내용의 설명"),
-      type: z
-        .enum(["basic", "subjective"])
-        .default("basic")
-        .describe(
-          "카드 유형: basic(답을 보고 직접 평가) 또는 subjective(AI가 답안 채점)",
-        ),
+function createTools(deckId: string) {
+  return {
+    cardAdd: tool({
+      description:
+        "덱에 새로운 암기 카드를 추가합니다. 앞면에는 질문을, 뒷면에는 답을 넣습니다.",
+      inputSchema: z.object({
+        front: z
+          .string()
+          .describe("카드 앞면 - 질문 또는 암기할 내용의 프롬프트"),
+        back: z.string().describe("카드 뒷면 - 정답 또는 암기할 내용의 설명"),
+        type: z
+          .enum(["basic", "subjective"])
+          .default("basic")
+          .describe(
+            "카드 유형: basic(답을 보고 직접 평가) 또는 subjective(AI가 답안 채점)",
+          ),
+      }),
+      execute: async ({ front, back, type }) => {
+        await insertCard({ deckId, front, back, type });
+        revalidateCardsCache(deckId);
+        revalidateDecksCache();
+        return { success: true, front, back, type };
+      },
     }),
-  },
-};
+  };
+}
 
 export async function POST(req: Request) {
   const {
@@ -43,6 +52,8 @@ export async function POST(req: Request) {
   }: { message: UIMessage; deckId: string; chatId: string } =
     await req.json();
 
+  const tools = createTools(deckId);
+
   // Load previous messages from DB instead of receiving all from client
   const session = await getChatSession(chatId);
   const previousMessages = (session?.messages as UIMessage[]) ?? [];
@@ -50,7 +61,7 @@ export async function POST(req: Request) {
   // Validate messages (tools may have changed between deploys)
   const messages = await validateUIMessages({
     messages: [...previousMessages, message],
-    tools,
+    tools: tools as Parameters<typeof validateUIMessages>[0]["tools"],
   });
 
   const result = streamText({
@@ -72,25 +83,7 @@ export async function POST(req: Request) {
 사용자가 "카드 만들어줘", "이 내용으로 카드 추가해줘" 등의 요청을 하면 적극적으로 카드를 생성하세요.
 카드를 추가한 후에는 어떤 카드를 만들었는지 요약해서 알려주세요.`,
     messages: await convertToModelMessages(messages),
-    tools: {
-      cardAdd: {
-        ...tools.cardAdd,
-        execute: async ({
-          front,
-          back,
-          type,
-        }: {
-          front: string;
-          back: string;
-          type: "basic" | "subjective";
-        }) => {
-          await insertCard({ deckId, front, back, type });
-          revalidateCardsCache(deckId);
-          revalidateDecksCache();
-          return { success: true, front, back, type };
-        },
-      },
-    },
+    tools,
     stopWhen: stepCountIs(10),
   });
 
